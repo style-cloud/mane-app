@@ -102,6 +102,7 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
   <button class="tab" onclick="sw('recipe')">レシピ</button>
   <button class="tab" onclick="sw('master')">食材マスター</button>
   <button class="tab" onclick="sw('import')">CSV取込</button>
+  <button class="tab" onclick="sw('label')">ラベル印刷</button>
 </div>
 
 <div class="body">
@@ -229,6 +230,62 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
     </div>
   </div>
 
+
+  <!-- ラベル印刷 -->
+  <div class="sec" id="tab-label">
+    <div class="card">
+      <p class="card-title">共通設定</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">全商品共通の製造者情報を設定してください。</p>
+      <div class="form-row"><span class="form-label">製造者名</span><input type="text" id="lb-manufacturer" placeholder="patisserie MAne 金野周太郎"/></div>
+      <div class="form-row"><span class="form-label">住所</span><input type="text" id="lb-address" placeholder="東京都板橋区高島平8-15-1"/></div>
+      <div style="text-align:right;">
+        <button class="btn btn-primary btn-sm" type="button" onclick="saveLabelSettings()">設定を保存</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">商品ラベル作成</p>
+      <div class="form-row">
+        <span class="form-label">商品選択</span>
+        <select id="lb-menu-select" onchange="loadLabelInfo()" style="flex:1;">
+          <option value="">商品を選択してください</option>
+        </select>
+      </div>
+      <div id="lb-form" style="display:none;">
+        <div class="form-row"><span class="form-label">名称</span><input type="text" id="lb-category" placeholder="焼菓子"/></div>
+        <div class="form-row" style="align-items:flex-start;">
+          <span class="form-label" style="margin-top:8px;">原材料名</span>
+          <textarea id="lb-ingredients" rows="3" style="flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;resize:vertical;font-family:inherit;" placeholder="小麦粉（国内産）、バター、砂糖、卵、塩&#10;（小麦、卵、乳成分を含む）"></textarea>
+        </div>
+        <div class="form-row"><span class="form-label">内容量</span><input type="text" id="lb-content" placeholder="1枚"/></div>
+        <div class="form-row" style="align-items:flex-start;">
+          <span class="form-label" style="margin-top:8px;">保存方法</span>
+          <textarea id="lb-storage" rows="2" style="flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;resize:vertical;font-family:inherit;" placeholder="高温多湿、直射日光を避けてください。"></textarea>
+        </div>
+        <div class="form-row"><span class="form-label">賞味期限</span><input type="date" id="lb-expiry"/></div>
+
+        <!-- 栄養成分プレビュー -->
+        <div id="lb-nutrition-preview" style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px 12px;margin:8px 0;font-size:12px;">
+          <p style="font-weight:600;margin-bottom:4px;">栄養成分（メニューから自動取得）</p>
+          <p id="lb-nutrition-text" style="color:var(--text2);">商品を選択すると表示されます</p>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn-sm" type="button" onclick="saveLabelInfo()">情報を保存</button>
+          <button class="btn btn-primary" type="button" onclick="previewLabel()">🖨 ラベルプレビュー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ラベルプレビューモーダル -->
+<div class="modal-overlay" id="label-modal" style="display:none;" onclick="closeLabelModal(event)">
+  <div class="modal-sheet" style="max-height:95vh;">
+    <div class="modal-handle"></div>
+    <div id="label-modal-body"></div>
+  </div>
 </div>
 
 <!-- 詳細モーダル -->
@@ -249,6 +306,225 @@ let menus=[], recipes=[], masterData=[];
 function setSyncing(){ document.getElementById('sdot').className='sync-dot loading'; document.getElementById('stxt').textContent='保存中...'; }
 function setSynced(){ document.getElementById('sdot').className='sync-dot'; document.getElementById('stxt').textContent='全スタッフと同期済み'; }
 function setError(msg){ document.getElementById('sdot').className='sync-dot error'; document.getElementById('stxt').textContent=msg||'エラー'; }
+
+
+// ---- ラベル印刷機能 ----
+let labelSettings = {manufacturer:'', address:''};
+let labelInfoCache = {};
+
+function initLabelTab(){
+  // 商品セレクトを更新
+  const sel = document.getElementById('lb-menu-select');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">商品を選択してください</option>' +
+    menus.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  if(current) sel.value = current;
+
+  // 共通設定を読み込み
+  const saved = localStorage.getItem('mane_label_settings');
+  if(saved){
+    labelSettings = JSON.parse(saved);
+    document.getElementById('lb-manufacturer').value = labelSettings.manufacturer||'';
+    document.getElementById('lb-address').value = labelSettings.address||'';
+  }
+}
+
+function saveLabelSettings(){
+  labelSettings.manufacturer = document.getElementById('lb-manufacturer').value.trim();
+  labelSettings.address = document.getElementById('lb-address').value.trim();
+  localStorage.setItem('mane_label_settings', JSON.stringify(labelSettings));
+  alert('共通設定を保存しました！');
+}
+
+async function loadLabelInfo(){
+  const menuId = document.getElementById('lb-menu-select').value;
+  if(!menuId){ document.getElementById('lb-form').style.display='none'; return; }
+  document.getElementById('lb-form').style.display='block';
+
+  // 栄養成分を取得
+  const m = menus.find(x=>x.id==menuId);
+  if(m){
+    // 栄養計算
+    const comps = Array.isArray(m.components)?m.components:[];
+    let total = {kcal:0,protein:0,fat:0,carbs:0,salt:0};
+    comps.forEach(c=>{
+      const master = masterData.find(x=>x.name===c.name);
+      if(master && master.is_packaging) return;
+      if(c.isRecipe){
+        const r = recipes.find(x=>x.name===c.name);
+        if(r){
+          const ings = Array.isArray(r.ingredients)?r.ingredients:[];
+          let rt={kcal:0,protein:0,fat:0,carbs:0,salt:0};
+          const rqty=r.total_qty||1;
+          ings.forEach(i=>{const n=calcIngredientNutrition(i);if(n){rt.kcal+=n.kcal;rt.protein+=n.protein;rt.fat+=n.fat;rt.carbs+=n.carbs;rt.salt+=n.salt;}});
+          const factor=c.qty/rqty;
+          total.kcal+=rt.kcal*factor;total.protein+=rt.protein*factor;total.fat+=rt.fat*factor;total.carbs+=rt.carbs*factor;total.salt+=rt.salt*factor;
+        }
+      } else {
+        const n=calcIngredientNutrition(c);
+        if(n){total.kcal+=n.kcal;total.protein+=n.protein;total.fat+=n.fat;total.carbs+=n.carbs;total.salt+=n.salt;}
+      }
+    });
+    const hasNutrition = total.kcal>0||total.protein>0||total.fat>0;
+    document.getElementById('lb-nutrition-text').textContent = hasNutrition
+      ? `エネルギー ${total.kcal.toFixed(1)}kcal　たんぱく質 ${total.protein.toFixed(1)}g　脂質 ${total.fat.toFixed(1)}g　炭水化物 ${total.carbs.toFixed(1)}g　食塩相当量 ${total.salt.toFixed(2)}g`
+      : '栄養成分が未登録です（食材マスターに栄養成分を入力してください）';
+  }
+
+  // 保存済みラベル情報を取得
+  try{
+    const res = await sb.from('label_info').select('*').eq('menu_id', menuId).single();
+    if(res.data){
+      document.getElementById('lb-category').value = res.data.category||'';
+      document.getElementById('lb-ingredients').value = res.data.ingredients||'';
+      document.getElementById('lb-content').value = res.data.content||'';
+      document.getElementById('lb-storage').value = res.data.storage||'';
+      labelInfoCache[menuId] = res.data;
+    } else {
+      document.getElementById('lb-category').value = '焼菓子';
+      document.getElementById('lb-ingredients').value = '';
+      document.getElementById('lb-content').value = '';
+      document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
+    }
+  }catch(e){
+    document.getElementById('lb-category').value = '焼菓子';
+    document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
+  }
+}
+
+async function saveLabelInfo(){
+  const menuId = document.getElementById('lb-menu-select').value;
+  if(!menuId){alert('商品を選択してください');return;}
+  const data = {
+    menu_id: parseInt(menuId),
+    category: document.getElementById('lb-category').value,
+    ingredients: document.getElementById('lb-ingredients').value,
+    content: document.getElementById('lb-content').value,
+    storage: document.getElementById('lb-storage').value,
+    manufacturer: labelSettings.manufacturer,
+    address: labelSettings.address,
+  };
+  const existing = labelInfoCache[menuId];
+  if(existing){
+    await sb.from('label_info').update(data).eq('menu_id', menuId);
+  } else {
+    await sb.from('label_info').insert(data);
+  }
+  labelInfoCache[menuId] = data;
+  alert('ラベル情報を保存しました！');
+}
+
+function previewLabel(){
+  const menuId = document.getElementById('lb-menu-select').value;
+  if(!menuId){alert('商品を選択してください');return;}
+  const m = menus.find(x=>x.id==menuId);
+  if(!m){return;}
+
+  const category = document.getElementById('lb-category').value;
+  const ingredients = document.getElementById('lb-ingredients').value;
+  const content = document.getElementById('lb-content').value;
+  const storage = document.getElementById('lb-storage').value;
+  const expiry = document.getElementById('lb-expiry').value;
+  const manufacturer = labelSettings.manufacturer || document.getElementById('lb-manufacturer').value;
+  const address = labelSettings.address || document.getElementById('lb-address').value;
+
+  // 賞味期限フォーマット
+  let expiryStr = '';
+  if(expiry){
+    const d = new Date(expiry);
+    expiryStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // 栄養成分を計算
+  const comps = Array.isArray(m.components)?m.components:[];
+  let total = {kcal:0,protein:0,fat:0,carbs:0,salt:0};
+  comps.forEach(c=>{
+    const master = masterData.find(x=>x.name===c.name);
+    if(master && master.is_packaging) return;
+    if(c.isRecipe){
+      const r=recipes.find(x=>x.name===c.name);
+      if(r){
+        const ings=Array.isArray(r.ingredients)?r.ingredients:[];
+        let rt={kcal:0,protein:0,fat:0,carbs:0,salt:0};
+        const rqty=r.total_qty||1;
+        ings.forEach(i=>{const n=calcIngredientNutrition(i);if(n){rt.kcal+=n.kcal;rt.protein+=n.protein;rt.fat+=n.fat;rt.carbs+=n.carbs;rt.salt+=n.salt;}});
+        const factor=c.qty/rqty;
+        total.kcal+=rt.kcal*factor;total.protein+=rt.protein*factor;total.fat+=rt.fat*factor;total.carbs+=rt.carbs*factor;total.salt+=rt.salt*factor;
+      }
+    } else {
+      const n=calcIngredientNutrition(c);
+      if(n){total.kcal+=n.kcal;total.protein+=n.protein;total.fat+=n.fat;total.carbs+=n.carbs;total.salt+=n.salt;}
+    }
+  });
+
+  const hasNutrition = total.kcal>0||total.protein>0||total.fat>0;
+
+  document.getElementById('label-modal-body').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <p style="font-size:16px;font-weight:600;">ラベルプレビュー</p>
+      <button class="btn btn-primary btn-sm" type="button" onclick="printLabel()">🖨 印刷</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：39mm × 48mm</p>
+
+    <!-- ラベルプレビュー（画面上は拡大表示） -->
+    <div style="display:flex;justify-content:center;margin-bottom:14px;">
+      <div id="label-preview-box" style="width:222px;border:1px solid #333;padding:6px;font-size:8px;line-height:1.5;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;">
+        <table style="width:100%;border-collapse:collapse;font-size:8px;">
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;white-space:nowrap;width:40%;">商品名</td><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;">${m.name}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">名称</td><td style="border:0.5px solid #333;padding:2px 4px;">${category}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:2px 4px;">${ingredients.replace(/
+/g,'<br>')}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">内容量</td><td style="border:0.5px solid #333;padding:2px 4px;">${content}</td></tr>
+          ${expiry?`<tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">賞味期限</td><td style="border:0.5px solid #333;padding:2px 4px;">${expiryStr}</td></tr>`:''}
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">保存方法</td><td style="border:0.5px solid #333;padding:2px 4px;">${storage}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">製造者</td><td style="border:0.5px solid #333;padding:2px 4px;">${manufacturer}<br>${address}</td></tr>
+          ${hasNutrition?`<tr><td colspan="2" style="border:0.5px solid #333;padding:2px 4px;">
+            <div style="font-size:7px;">栄養成分表示（${content||'1個'}当たり）この表示値は、目安です。</div>
+            <table style="width:100%;border-collapse:collapse;font-size:7px;margin-top:2px;">
+              <tr>
+                <td style="border:0.5px solid #333;padding:1px 3px;">エネルギー</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">たんぱく質</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">脂質</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">炭水化物</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">食塩相当量</td>
+              </tr>
+              <tr>
+                <td style="border:0.5px solid #333;padding:1px 3px;">${total.kcal.toFixed(1)}kcal</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">${total.protein.toFixed(1)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">${total.fat.toFixed(1)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">${total.carbs.toFixed(1)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 3px;">${total.salt.toFixed(2)}g</td>
+              </tr>
+            </table>
+          </td></tr>`:''}
+        </table>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--text2);text-align:center;">「印刷」ボタンを押すとブラウザの印刷ダイアログが開きます。<br>用紙サイズを39×48mmに設定してください。</p>
+  `;
+  document.getElementById('label-modal').style.display='flex';
+}
+
+function printLabel(){
+  const labelBox = document.getElementById('label-preview-box');
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      @page { size: 39mm 48mm; margin: 0; }
+      body { margin: 0; padding: 1mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; }
+      table { width: 100%; border-collapse: collapse; font-size: 5.5pt; line-height: 1.4; }
+      td { border: 0.3pt solid #333; padding: 1pt 2pt; vertical-align: top; }
+    </style>
+    </head><body>${labelBox.innerHTML}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ win.print(); }, 500);
+}
+
+function closeLabelModal(e){
+  if(!e||e.target===document.getElementById('label-modal'))
+    document.getElementById('label-modal').style.display='none';
+}
 
 // ---- データ読み込み ----
 async function loadAll(){
