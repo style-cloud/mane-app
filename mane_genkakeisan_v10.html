@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MAne 原価計算</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#FDFBF7;--bg2:#F5F0E8;--bg3:#EDE5D8;
+  --text:#2C1810;--text2:#7A6355;--text3:#B0A090;
+  --border:#E8DDD0;--border2:#D4C4B0;
+  --green:#5C8A4A;--green-bg:#EEF5E8;
+  --yellow:#8A6B00;--yellow-bg:#FFF8E0;
+  --red:#B8271E;--red-bg:#FDECEA;
+  --blue:#4A6A7A;--blue-bg:#EBF2F5;
+  --gold:#C4A35A;--gold-bg:#FBF5E6;
+  --radius:10px;--radius-sm:6px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;min-height:100vh;}
+.elegant{font-family:'Georgia','Times New Roman',serif;font-style:italic;}
+.header{background:var(--text);color:var(--bg);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-bottom:2px solid var(--gold);}
+.header-title{font-size:15px;font-weight:600;letter-spacing:0.12em;}
+.header-sub{font-size:10px;opacity:0.55;margin-top:3px;letter-spacing:0.08em;}
+.sync-pill{display:flex;align-items:center;gap:6px;font-size:11px;opacity:0.8;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;}
+.sync-dot.loading{background:#FACC15;animation:pulse 1s infinite;}
+.sync-dot.error{background:#F87171;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:11px 14px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;letter-spacing:0.04em;}
+.tab.active{color:var(--text);border-bottom:2px solid var(--gold);}
+.body{padding:16px;max-width:600px;margin:0 auto;}
+.sec{display:none;}.sec.active{display:block;}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(44,24,16,0.04);}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;}
+.form-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.form-label{font-size:13px;color:var(--text2);min-width:78px;flex-shrink:0;}
+input,select{font-size:14px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;color:var(--text);width:100%;}
+input:focus,select:focus{outline:none;border-color:var(--text);}
+.igrid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 30px;gap:5px;align-items:center;margin-bottom:5px;}
+.ch{font-size:11px;color:var(--text3);font-weight:500;}
+.btn{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-weight:500;border:1px solid var(--border2);background:#fff;color:var(--text);transition:background 0.15s;}
+.btn:hover{background:var(--bg2);}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-primary{background:var(--text);color:var(--bg);border-color:var(--text);}
+.btn-primary:hover{background:#3D2518;}
+.btn-danger{color:var(--red);border-color:#FECACA;font-size:12px;padding:6px 8px;}
+.btn-danger:hover{background:var(--red-bg);}
+.btn-sm{font-size:12px;padding:6px 12px;}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.met{background:var(--bg2);border-radius:var(--radius-sm);padding:10px 12px;}
+.met-label{font-size:11px;color:var(--text2);margin-bottom:4px;}
+.met-value{font-size:19px;font-weight:600;}
+.met-value.ok{color:var(--green);}
+.met-value.warn{color:var(--yellow);}
+.met-value.bad{color:var(--red);}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;}
+.b-ok{background:var(--green-bg);color:var(--green);}
+.b-gold{background:var(--gold-bg);color:var(--gold);}
+.b-warn{background:var(--yellow-bg);color:var(--yellow);}
+.b-bad{background:var(--red-bg);color:var(--red);}
+.b-none{background:var(--bg2);color:var(--text3);}
+.b-blue{background:var(--blue-bg);color:var(--blue);}
+.list-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;}
+.list-item:hover{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 2px 8px rgba(196,163,90,0.12);}
+.item-name{font-size:14px;font-weight:500;flex:1;}
+.item-meta{font-size:11px;color:var(--text3);}
+.empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:14px;}
+.warning-box{background:var(--yellow-bg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--yellow);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.modal-sheet{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;padding:16px;}
+.modal-handle{width:36px;height:4px;background:var(--gold);border-radius:2px;margin:0 auto 14px;opacity:0.6;}
+.det-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+.det-table th{font-size:11px;color:var(--text2);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;background:var(--bg2);}
+.det-table td{padding:8px;border-bottom:1px solid var(--border);}
+.det-table tr:last-child td{border-bottom:none;}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.drop-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;margin-bottom:12px;transition:background 0.15s;}
+.drop-zone:hover{background:var(--bg2);}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.sub-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--blue-bg);color:var(--blue);font-weight:500;margin-left:4px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <img src="data:image/png;base64,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" alt="MAne" style="height:56px;width:auto;display:block;"/>
+    <div class="header-sub" style="margin-top:0;">GESTION DES COÛTS · 原価管理</div>
+  </div>
+  <div class="sync-pill">
+    <div class="sync-dot loading" id="sdot"></div>
+    <span id="stxt">接続中...</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('menu')">メニュー</button>
+  <button class="tab" onclick="sw('recipe')">レシピ</button>
+  <button class="tab" onclick="sw('master')">食材マスター</button>
+  <button class="tab" onclick="sw('import')">CSV取込</button>
+</div>
+
+<div class="body">
+
+  <!-- メニュー一覧 -->
+  <div class="sec active" id="tab-menu">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <p style="font-size:15px;font-weight:600;">メニュー <span id="menu-count" style="font-size:13px;color:var(--text2);font-weight:400;"></span></p>
+      <input type="text" id="menu-search" placeholder="検索..." style="width:140px;font-size:13px;" oninput="renderMenuList()"/>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">完成品・販売商品の原価率を管理します。タップで詳細。</p>
+    <div id="menu-list"><div class="empty"><span class="spinner"></span>読み込み中...</div></div>
+  </div>
+
+  <!-- レシピ一覧 -->
+  <div class="sec" id="tab-recipe">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <p style="font-size:15px;font-weight:600;">レシピ <span id="recipe-count" style="font-size:13px;color:var(--text2);font-weight:400;"></span></p>
+      <input type="text" id="search" placeholder="検索..." style="width:140px;font-size:13px;" oninput="renderList()"/>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">素材・パーツのレシピ一覧です。タップで詳細。</p>
+    <div id="rlist"><div class="empty"><span class="spinner"></span>読み込み中...</div></div>
+  </div>
+
+  <!-- 食材マスター -->
+  <div class="sec" id="tab-master">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <p style="font-size:15px;font-weight:600;">食材マスター <span id="master-count" style="font-size:13px;color:var(--text2);font-weight:400;"></span></p>
+      <input type="text" id="master-search" placeholder="検索..." style="width:140px;font-size:13px;" oninput="renderMasterTable()"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm" type="button" onclick="openAddMaster()">＋ 新規追加</button>
+      <button class="btn btn-sm" type="button" onclick="recalcAll()">🔄 全レシピ・メニューを再計算</button>
+    </div>
+    <div id="master-list"><div class="empty"><span class="spinner"></span>読み込み中...</div></div>
+  </div>
+
+  <!-- CSV取込 -->
+  <div class="sec" id="tab-import">
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm" id="mode-menu-btn" onclick="setImportMode('menu')" type="button">メニューCSV</button>
+      <button class="btn btn-sm" id="mode-recipe-btn" onclick="setImportMode('recipe')" type="button">レシピCSV</button>
+      <button class="btn btn-sm" id="mode-master-btn" onclick="setImportMode('master')" type="button">食材マスターCSV</button>
+    </div>
+
+    <!-- メニューCSV -->
+    <div id="import-menu-panel">
+      <div class="card">
+        <p class="card-title">メニュー CSV 一括取込</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Filletの「メニュー」からエクスポートしたCSVを複数まとめて選択してください。ファイル名がメニュー名になります。</p>
+        <div class="drop-zone" onclick="document.getElementById('menufiles').click()"
+          ondragover="event.preventDefault();this.style.background='var(--bg2)'"
+          ondragleave="this.style.background=''"
+          ondrop="handleMenuDrop(event)">
+          <input type="file" id="menufiles" accept=".csv" multiple onchange="handleMenuFiles(event)" style="display:none;"/>
+          <div style="font-size:28px;margin-bottom:8px;">🍰</div>
+          <p style="font-size:14px;font-weight:500;">メニューCSVを選択</p>
+          <p style="font-size:12px;color:var(--text2);margin-top:4px;">複数まとめて選択OK</p>
+        </div>
+        <div id="menu-file-list"></div>
+        <div id="menu-import-actions" style="display:none;margin-top:12px;padding:14px;background:var(--bg2);border-radius:var(--radius);">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span id="menu-import-summary" style="font-size:13px;color:var(--text2);"></span>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" type="button" onclick="resetMenuImport()">クリア</button>
+              <button class="btn btn-primary btn-sm" type="button" id="do-menu-import-btn" onclick="doMenuImport()">一括取込・共有</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- レシピCSV -->
+    <div id="import-recipe-panel" style="display:none;">
+      <div class="card">
+        <p class="card-title">レシピ CSV 一括取込</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">FilletからエクスポートしたレシピCSVを複数まとめて選択できます。</p>
+        <div class="drop-zone" onclick="document.getElementById('csvfiles').click()"
+          ondragover="event.preventDefault();this.style.background='var(--bg2)'"
+          ondragleave="this.style.background=''"
+          ondrop="handleDrop(event)">
+          <input type="file" id="csvfiles" accept=".csv" multiple onchange="handleFiles(event)" style="display:none;"/>
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <p style="font-size:14px;font-weight:500;">レシピCSVを選択</p>
+          <p style="font-size:12px;color:var(--text2);margin-top:4px;">複数まとめて選択OK</p>
+        </div>
+        <div id="file-list"></div>
+        <div id="import-actions" style="display:none;margin-top:12px;padding:14px;background:var(--bg2);border-radius:var(--radius);">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span id="import-summary" style="font-size:13px;color:var(--text2);"></span>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" type="button" onclick="resetImport()">クリア</button>
+              <button class="btn btn-primary btn-sm" type="button" id="do-import-btn" onclick="doImport()">一括取込・共有</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 食材マスターCSV -->
+    <div id="import-master-panel" style="display:none;">
+      <div class="card">
+        <p class="card-title">食材マスター CSV 取込</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Filletの「材料」からエクスポートしたCSVを選択してください。</p>
+        <div class="drop-zone" onclick="document.getElementById('mastercsv').click()"
+          ondragover="event.preventDefault();this.style.background='var(--bg2)'"
+          ondragleave="this.style.background=''"
+          ondrop="handleMasterDrop(event)">
+          <input type="file" id="mastercsv" accept=".csv" onchange="handleMasterFile(event)" style="display:none;"/>
+          <div style="font-size:28px;margin-bottom:8px;">📋</div>
+          <p style="font-size:14px;font-weight:500;">食材マスターCSVを選択</p>
+          <p style="font-size:12px;color:var(--text2);margin-top:4px;">fillet_export_prices_〇〇.csv</p>
+        </div>
+        <div id="master-preview"></div>
+        <div id="master-import-actions" style="display:none;margin-top:12px;padding:14px;background:var(--bg2);border-radius:var(--radius);">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span id="master-import-summary" style="font-size:13px;color:var(--text2);"></span>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" type="button" onclick="resetMasterImport()">クリア</button>
+              <button class="btn btn-primary btn-sm" type="button" id="do-master-import-btn" onclick="doMasterImport()">取込・共有</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 詳細モーダル -->
+<div class="modal-overlay" id="modal" style="display:none;" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wgkqowmbhpazkabvfehj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indna3Fvd21iaHBhemthYnZmZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTU0NDgsImV4cCI6MjA5MzY3MTQ0OH0.wDBqhQg4rOnO4RY2CtuQ-8075NLCxcqQWmgynXijCL8';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let menus=[], recipes=[], masterData=[];
+
+function setSyncing(){ document.getElementById('sdot').className='sync-dot loading'; document.getElementById('stxt').textContent='保存中...'; }
+function setSynced(){ document.getElementById('sdot').className='sync-dot'; document.getElementById('stxt').textContent='全スタッフと同期済み'; }
+function setError(msg){ document.getElementById('sdot').className='sync-dot error'; document.getElementById('stxt').textContent=msg||'エラー'; }
+
+// ---- データ読み込み ----
+async function loadAll(){
+  try{
+    const [mRes, rRes, miRes] = await Promise.all([
+      sb.from('menus').select('*').order('name'),
+      sb.from('recipes').select('*').order('name'),
+      sb.from('master_ingredients').select('*').order('name')
+    ]);
+    if(mRes.error) throw mRes.error;
+    if(rRes.error) throw rRes.error;
+    if(miRes.error) throw miRes.error;
+    menus = mRes.data||[];
+    recipes = rRes.data||[];
+    masterData = miRes.data||[];
+    setSynced();
+    renderMenuList();
+    renderList();
+    renderMasterTable();
+  } catch(e){ setError('接続エラー'); console.error(e); }
+}
+
+// ---- タブ切替 ----
+function sw(t){
+  ['menu','recipe','master','import'].forEach((s,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',s===t);
+    document.getElementById('tab-'+s).classList.toggle('active',s===t);
+  });
+}
+
+// ---- メニュー一覧 ----
+function rateClass(r){ return r!=null?(r<=35?'b-ok':r<=45?'b-warn':'b-bad'):'b-none'; }
+function rateText(r){ return r!=null?r.toFixed(1)+'%':'売価未設定'; }
+
+function renderMenuList(){
+  const q=(document.getElementById('menu-search').value||'').toLowerCase();
+  const el=document.getElementById('menu-list');
+  const f=menus.filter(m=>m.name.toLowerCase().includes(q));
+  document.getElementById('menu-count').textContent=`（${menus.length}件）`;
+  if(!f.length){el.innerHTML='<div class="empty">メニューがまだありません</div>';return;}
+  el.innerHTML=f.map(m=>`
+    <div class="list-item" onclick="openMenuDetail(${m.id})">
+      <div style="flex:1;">
+        <div class="item-name">${m.name}</div>
+        <div class="item-meta">原価 ${m.total?m.total.toFixed(0)+'円':'—'}　売価 ${m.price?m.price+'円':'未設定'}</div>
+      </div>
+      <span class="badge ${rateClass(m.rate)}">${rateText(m.rate)}</span>
+      <span style="color:var(--text3);font-size:16px;">›</span>
+    </div>`).join('');
+}
+
+function openMenuDetail(id){
+  const m=menus.find(x=>x.id===id);
+  if(!m) return;
+  const rc=m.rate!=null?(m.rate<=35?'ok':m.rate<=45?'warn':'bad'):'';
+  const comps=Array.isArray(m.components)?m.components:[];
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+      <div>
+        <p style="font-size:17px;font-weight:600;">${m.name}</p>
+        <p style="font-size:12px;color:var(--text2);margin-top:3px;">完成品メニュー</p>
+      </div>
+      <button class="btn btn-danger" type="button" onclick="delMenu(${m.id})">削除</button>
+    </div>
+    <div class="metrics">
+      <div class="met"><div class="met-label">原価合計</div><div class="met-value">${m.total?m.total.toFixed(0)+'円':'—'}</div></div>
+      <div class="met"><div class="met-label">売価</div><div class="met-value">${m.price?m.price+'円':'未設定'}</div></div>
+      <div class="met"><div class="met-label">原価率</div><div class="met-value ${rc}">${m.rate!=null?m.rate.toFixed(1)+'%':'—'}</div></div>
+    </div>
+    ${!m.price?'<div class="warning-box">⚠️ 売価が未設定です。下で設定すると原価率が計算されます。</div>':''}
+    <p style="font-size:13px;font-weight:600;margin-bottom:8px;">構成要素（${comps.length}点）</p>
+    <table class="det-table">
+      <tr><th>名前</th><th>量</th><th>単位</th><th>原価</th><th>種別</th></tr>
+      ${comps.map(c=>`<tr>
+        <td style="font-weight:500;">${c.name}</td>
+        <td>${c.qty}</td>
+        <td>${c.unit}</td>
+        <td>${c.cost?c.cost.toFixed(0)+'円':'—'}</td>
+        <td><span class="${c.isRecipe?'sub-badge':''}"">${c.isRecipe?'レシピ':'材料'}</span></td>
+      </tr>`).join('')}
+    </table>
+    <hr class="divider"/>
+    <p style="font-size:13px;font-weight:600;margin-bottom:10px;">売価を設定</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="number" id="mp" placeholder="例：4167" value="${m.price||''}" style="width:120px;"/>
+      <span style="font-size:13px;color:var(--text2);">円</span>
+      <button class="btn btn-primary btn-sm" type="button" onclick="updateMenuPrice(${m.id})">更新</button>
+    </div>
+    <hr class="divider"/>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <p style="font-size:13px;font-weight:600;">栄養成分表示</p>
+      <button class="btn btn-sm" type="button" onclick="calcMenuNutrition(${m.id})">🔢 計算</button>
+    </div>
+    <div id="nutrition-result-${m.id}">
+      <p style="font-size:12px;color:var(--text2);">「計算」ボタンを押すと食材マスターの栄養成分から自動計算されます。</p>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+
+async function updateMenuPrice(id){
+  const price=parseFloat(document.getElementById('mp').value)||0;
+  const m=menus.find(x=>x.id===id);
+  if(!m) return;
+  const rate=price&&m.total?m.total/price*100:null;
+  setSyncing();
+  await sb.from('menus').update({price,rate}).eq('id',id);
+  await loadAll();
+  closeModal();
+  alert('売価を更新しました！');
+}
+
+async function delMenu(id){
+  if(!confirm('このメニューを削除しますか？'))return;
+  setSyncing();
+  await sb.from('menus').delete().eq('id',id);
+  await loadAll();
+  closeModal();
+}
+
+// ---- レシピ一覧 ----
+function renderList(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const el=document.getElementById('rlist');
+  const f=recipes.filter(r=>r.name.toLowerCase().includes(q));
+  document.getElementById('recipe-count').textContent=`（${recipes.length}件）`;
+  if(!f.length){el.innerHTML='<div class="empty">レシピがまだありません</div>';return;}
+  el.innerHTML=f.map(r=>`
+    <div class="list-item" onclick="openRecipeDetail(${r.id})">
+      <div style="flex:1;">
+        <div class="item-name">${r.name}</div>
+        <div class="item-meta">原価 ${r.total?r.total.toFixed(0)+'円':'—'}</div>
+      </div>
+      <span style="color:var(--text3);font-size:16px;">›</span>
+    </div>`).join('');
+}
+
+function openRecipeDetail(id){
+  const r=recipes.find(x=>x.id===id);
+  if(!r) return;
+  const ings=Array.isArray(r.ingredients)?r.ingredients:[];
+  const totalQty=r.total_qty||ings.reduce((s,i)=>s+(i.unit===ings[0]?.unit?i.qty:0),0)||0;
+  const unitPrice=r.total_qty&&r.total?r.total/r.total_qty:null;
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+      <div>
+        <p style="font-size:17px;font-weight:600;">${r.name}</p>
+        <p style="font-size:12px;color:var(--text2);margin-top:3px;">サブレシピ</p>
+      </div>
+      <button class="btn btn-danger" type="button" onclick="delRecipe(${r.id})">削除</button>
+    </div>
+    <div class="metrics">
+      <div class="met"><div class="met-label">原価合計</div><div class="met-value">${r.total?r.total.toFixed(0)+'円':'—'}</div></div>
+      <div class="met"><div class="met-label">総量</div><div class="met-value">${r.total_qty?r.total_qty+''+(r.total_unit||''):'未設定'}</div></div>
+      <div class="met"><div class="met-label">単価</div><div class="met-value">${unitPrice?'¥'+unitPrice.toFixed(2)+'/'+(r.total_unit||''):'—'}</div></div>
+    </div>
+    ${!r.total_qty?'<div class="warning-box">⚠️ 総量が未設定です。下で設定すると正しく計算されます。</div>':''}
+    <p style="font-size:13px;font-weight:600;margin-bottom:8px;">材料一覧（${ings.length}種）</p>
+    <table class="det-table">
+      <tr><th>材料名</th><th>使用量</th><th>単位</th><th>原価</th></tr>
+      ${ings.map(i=>`<tr>
+        <td>${i.name}</td><td>${i.qty}</td><td>${i.unit}</td>
+        <td>${i.cost?i.cost.toFixed(0)+'円':(i.qty&&i.price?(i.qty*i.price).toFixed(0)+'円':'—')}</td>
+      </tr>`).join('')}
+    </table>
+    <hr class="divider"/>
+    <p style="font-size:13px;font-weight:600;margin-bottom:10px;">総量を設定（正しい単価計算に必要）</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:8px;">例：シャンティのレシピが全材料で1,120g作れる場合 → 総量: 1120g</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="number" id="rq" placeholder="例：1120" value="${r.total_qty||''}" style="width:110px;"/>
+      <select id="ru" style="width:75px;">
+        ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${(r.total_unit||'g')===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <button class="btn btn-primary btn-sm" type="button" onclick="updateRecipeTotalQty(${r.id})">更新</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+
+async function updateRecipeTotalQty(id){
+  const total_qty=parseFloat(document.getElementById('rq').value)||0;
+  const total_unit=document.getElementById('ru').value;
+  if(!total_qty){alert('総量を入力してください');return;}
+  const r=recipes.find(x=>x.id===id);
+  if(!r) return;
+  // unit = 総量あたりの原価 → 1単位あたりの単価
+  const unit = r.total ? r.total/total_qty : 0;
+  setSyncing();
+  await sb.from('recipes').update({total_qty,total_unit,unit}).eq('id',id);
+  await loadAll();
+  closeModal();
+  alert(`「${r.name}」の総量を更新しました！\n単価: ¥${unit.toFixed(2)}/${total_unit}`);
+}
+
+async function delRecipe(id){
+  if(!confirm('このレシピを削除しますか？'))return;
+  setSyncing();
+  await sb.from('recipes').delete().eq('id',id);
+  await loadAll();
+  closeModal();
+}
+
+// ---- 食材マスター表示・編集 ----
+function renderMasterTable(){
+  const q=(document.getElementById('master-search').value||'').toLowerCase();
+  const el=document.getElementById('master-list');
+  document.getElementById('master-count').textContent=`（${masterData.length}件）`;
+  const f=masterData.filter(m=>m.name.toLowerCase().includes(q)||(m.vendor||'').toLowerCase().includes(q));
+  if(!f.length){el.innerHTML='<div class="empty">食材マスターがありません</div>';return;}
+  el.innerHTML=f.map(m=>`
+    <div class="list-item" style="flex-direction:column;align-items:stretch;gap:6px;cursor:default;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <span style="font-size:14px;font-weight:500;">${m.name}</span>
+          <span style="font-size:11px;color:var(--text2);margin-left:8px;">${m.vendor||''}</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" type="button" onclick="openEditMaster(${m.id})" style="font-size:12px;padding:4px 10px;">編集</button>
+          <button class="btn btn-danger" type="button" onclick="deleteMaster(${m.id})" style="font-size:12px;padding:4px 10px;">削除</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);">
+        購入単位：${m.qty}${m.unit}　価格：¥${(m.price||0).toLocaleString()}　単価：¥${m.qty?(m.price/m.qty).toFixed(2):'-'}/${m.unit}
+      </div>
+    </div>`).join('');
+}
+
+function openAddMaster(){
+  document.getElementById('modal-body').innerHTML=`
+    <div style="margin-bottom:14px;">
+      <p style="font-size:17px;font-weight:600;">食材を追加</p>
+    </div>
+    ${masterFormHTML()}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn" type="button" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" type="button" onclick="saveMasterAdd()">追加・共有</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+
+function openEditMaster(id){
+  const m=masterData.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById('modal-body').innerHTML=`
+    <div style="margin-bottom:14px;">
+      <p style="font-size:17px;font-weight:600;">食材を編集</p>
+    </div>
+    ${masterFormHTML(m)}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn" type="button" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" type="button" onclick="saveMasterEdit(${id})">保存・共有</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+}
+
+function masterFormHTML(m={}){
+  return `
+    <div class="form-row"><span class="form-label">食材名</span><input type="text" id="mf-name" value="${m.name||''}" placeholder="例：バター"/></div>
+    <div class="form-row"><span class="form-label">業者名</span><input type="text" id="mf-vendor" value="${m.vendor||''}" placeholder="例：池伝株式会社"/></div>
+    <div class="form-row">
+      <span class="form-label">購入量</span>
+      <input type="number" id="mf-qty" value="${m.qty||''}" placeholder="1000" style="width:100px;flex:none;"/>
+      <select id="mf-unit" style="width:80px;flex:none;">
+        ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${(m.unit||'g')===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-row">
+      <span class="form-label">購入価格</span>
+      <input type="number" id="mf-price" value="${m.price||''}" placeholder="800" style="width:120px;flex:none;"/>
+      <span style="font-size:13px;color:var(--text2);">円</span>
+    </div>
+    <div style="margin:10px 0 6px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="mf-packaging" ${m.is_packaging?'checked':''} style="width:16px;height:16px;flex:none;"/>
+        <span>包材として扱う（袋・箱・トレーなど）<br><span style="font-size:11px;color:var(--text2);">チェックすると栄養計算から除外されます</span></span>
+      </label>
+    </div>
+    <div id="mf-nutrition-section">
+      <p style="font-size:13px;font-weight:600;margin:12px 0 8px;">栄養成分（100gあたり）</p>
+      <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">g・ml系の食材のみ入力してください。個・枚などの場合は1個あたりの値を入力。</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-row" style="margin:0;"><span class="form-label" style="min-width:90px;">エネルギー</span><input type="number" id="mf-kcal" value="${m.kcal||''}" placeholder="0"/><span style="font-size:12px;color:var(--text2);margin-left:4px;white-space:nowrap;">kcal</span></div>
+        <div class="form-row" style="margin:0;"><span class="form-label" style="min-width:90px;">タンパク質</span><input type="number" id="mf-protein" value="${m.protein||''}" placeholder="0"/><span style="font-size:12px;color:var(--text2);margin-left:4px;">g</span></div>
+        <div class="form-row" style="margin:0;"><span class="form-label" style="min-width:90px;">脂質</span><input type="number" id="mf-fat" value="${m.fat||''}" placeholder="0"/><span style="font-size:12px;color:var(--text2);margin-left:4px;">g</span></div>
+        <div class="form-row" style="margin:0;"><span class="form-label" style="min-width:90px;">炭水化物</span><input type="number" id="mf-carbs" value="${m.carbs||''}" placeholder="0"/><span style="font-size:12px;color:var(--text2);margin-left:4px;">g</span></div>
+        <div class="form-row" style="margin:0;"><span class="form-label" style="min-width:90px;">食塩相当量</span><input type="number" id="mf-salt" value="${m.salt||''}" placeholder="0"/><span style="font-size:12px;color:var(--text2);margin-left:4px;">g</span></div>
+      </div>
+    </div>`;
+}
+
+async function saveMasterAdd(){
+  const item=getMasterFormData();
+  if(!item) return;
+  setSyncing();
+  const res=await sb.from('master_ingredients').insert(item);
+  if(res.error){setError('保存失敗');return;}
+  await loadAll();
+  closeModal();
+  alert(`「${item.name}」を追加しました！`);
+}
+
+async function saveMasterEdit(id){
+  const item=getMasterFormData();
+  if(!item) return;
+  setSyncing();
+  const res=await sb.from('master_ingredients').update(item).eq('id',id);
+  if(res.error){setError('保存失敗');return;}
+  await loadAll();
+  closeModal();
+  alert(`「${item.name}」を更新しました！`);
+}
+
+function getMasterFormData(){
+  const name=document.getElementById('mf-name').value.trim();
+  const vendor=document.getElementById('mf-vendor').value.trim();
+  const qty=parseFloat(document.getElementById('mf-qty').value)||0;
+  const unit=document.getElementById('mf-unit').value;
+  const price=parseFloat(document.getElementById('mf-price').value)||0;
+  const is_packaging=document.getElementById('mf-packaging').checked;
+  const kcal=parseFloat(document.getElementById('mf-kcal').value)||null;
+  const protein=parseFloat(document.getElementById('mf-protein').value)||null;
+  const fat=parseFloat(document.getElementById('mf-fat').value)||null;
+  const carbs=parseFloat(document.getElementById('mf-carbs').value)||null;
+  const salt=parseFloat(document.getElementById('mf-salt').value)||null;
+  if(!name){alert('食材名を入力してください');return null;}
+  if(!qty){alert('購入量を入力してください');return null;}
+  if(!price){alert('購入価格を入力してください');return null;}
+  return{name,vendor,qty,unit,price,is_packaging,kcal,protein,fat,carbs,salt};
+}
+
+async function deleteMaster(id){
+  const m=masterData.find(x=>x.id===id);
+  if(!confirm(`「${m?.name}」を削除しますか？`))return;
+  setSyncing();
+  await sb.from('master_ingredients').delete().eq('id',id);
+  await loadAll();
+}
+
+// ---- 栄養成分計算 ----
+function getNutritionPer100g(ingredientName, unit){
+  const m = masterData.find(x=>x.name===ingredientName);
+  if(!m || m.is_packaging) return null;
+  if(m.kcal==null && m.protein==null) return null;
+  // 単位がg/ml系でない場合はスキップ
+  const weightUnits=['g','kg','ml','l'];
+  if(!weightUnits.includes(m.unit) && !weightUnits.includes(unit)) return null;
+  return {kcal:m.kcal||0, protein:m.protein||0, fat:m.fat||0, carbs:m.carbs||0, salt:m.salt||0};
+}
+
+function calcIngredientNutrition(ing){
+  // ingはレシピ材料またはメニュー構成要素
+  const n = getNutritionPer100g(ing.name, ing.unit);
+  if(!n) return null;
+  let qty = ing.qty;
+  // 単位変換（kgをgに、lをmlに）
+  if(ing.unit==='kg') qty = ing.qty * 1000;
+  if(ing.unit==='l') qty = ing.qty * 1000;
+  const factor = qty / 100;
+  return {
+    kcal: n.kcal * factor,
+    protein: n.protein * factor,
+    fat: n.fat * factor,
+    carbs: n.carbs * factor,
+    salt: n.salt * factor,
+  };
+}
+
+function calcMenuNutrition(menuId){
+  const m = menus.find(x=>x.id===menuId);
+  if(!m) return;
+  const comps = Array.isArray(m.components)?m.components:[];
+  let total = {kcal:0, protein:0, fat:0, carbs:0, salt:0};
+  let missingItems = [];
+
+  comps.forEach(c=>{
+    if(c.isRecipe){
+      // サブレシピの場合：レシピの材料を再帰的に計算
+      const r = recipes.find(x=>x.name===c.name);
+      if(r){
+        const ings = Array.isArray(r.ingredients)?r.ingredients:[];
+        let recipeTotal = {kcal:0, protein:0, fat:0, carbs:0, salt:0};
+        let recipeQty = r.total_qty||1;
+        ings.forEach(i=>{
+          const n = calcIngredientNutrition(i);
+          if(n){
+            recipeTotal.kcal += n.kcal;
+            recipeTotal.protein += n.protein;
+            recipeTotal.fat += n.fat;
+            recipeTotal.carbs += n.carbs;
+            recipeTotal.salt += n.salt;
+          }
+        });
+        // 使用量分だけ按分
+        const factor = c.qty / recipeQty;
+        total.kcal += recipeTotal.kcal * factor;
+        total.protein += recipeTotal.protein * factor;
+        total.fat += recipeTotal.fat * factor;
+        total.carbs += recipeTotal.carbs * factor;
+        total.salt += recipeTotal.salt * factor;
+      }
+    } else {
+      // 材料の場合
+      const master = masterData.find(x=>x.name===c.name);
+      if(master && master.is_packaging) return; // 包材はスキップ
+      const n = calcIngredientNutrition(c);
+      if(n){
+        total.kcal += n.kcal;
+        total.protein += n.protein;
+        total.fat += n.fat;
+        total.carbs += n.carbs;
+        total.salt += n.salt;
+      } else {
+        missingItems.push(c.name);
+      }
+    }
+  });
+
+  const el = document.getElementById(`nutrition-result-${menuId}`);
+  if(!el) return;
+
+  el.innerHTML = `
+    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;">
+      <p style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">栄養成分表示（1個あたり）</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 4px;color:var(--text2);">エネルギー</td>
+          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.kcal.toFixed(1)} kcal</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 4px;color:var(--text2);">タンパク質</td>
+          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.protein.toFixed(1)} g</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 4px;color:var(--text2);">脂質</td>
+          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.fat.toFixed(1)} g</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 4px;color:var(--text2);">炭水化物</td>
+          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.carbs.toFixed(1)} g</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 4px;color:var(--text2);">食塩相当量</td>
+          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.salt.toFixed(2)} g</td>
+        </tr>
+      </table>
+    </div>
+    ${missingItems.length>0?`<div class="warning-box">⚠️ 以下の食材は栄養成分が未登録のため計算から除外されています：<br><span style="font-size:11px;">${missingItems.join('、')}</span></div>`:''}
+  `;
+}
+
+
+// ---- 栄養成分計算 ----
+function getNutritionPer100g(ingredientName){
+  const m = masterData.find(x=>x.name===ingredientName);
+  if(!m || m.is_packaging) return null;
+  if(m.kcal==null && m.protein==null) return null;
+  return {kcal:m.kcal||0, protein:m.protein||0, fat:m.fat||0, carbs:m.carbs||0, salt:m.salt||0};
+}
+
+function calcIngredientNutrition(ing){
+  const n = getNutritionPer100g(ing.name);
+  if(!n) return null;
+  let qty = ing.qty;
+  if(ing.unit==='kg') qty = ing.qty * 1000;
+  if(ing.unit==='l') qty = ing.qty * 1000;
+  const factor = qty / 100;
+  return {kcal:n.kcal*factor, protein:n.protein*factor, fat:n.fat*factor, carbs:n.carbs*factor, salt:n.salt*factor};
+}
+
+function calcMenuNutrition(menuId){
+  const m = menus.find(x=>x.id===menuId);
+  if(!m) return;
+  const comps = Array.isArray(m.components)?m.components:[];
+  let total = {kcal:0,protein:0,fat:0,carbs:0,salt:0};
+  let missing = [];
+  comps.forEach(c=>{
+    const master = masterData.find(x=>x.name===c.name);
+    if(master && master.is_packaging) return;
+    if(c.isRecipe){
+      const r = recipes.find(x=>x.name===c.name);
+      if(r){
+        const ings = Array.isArray(r.ingredients)?r.ingredients:[];
+        let rt = {kcal:0,protein:0,fat:0,carbs:0,salt:0};
+        const rqty = r.total_qty||1;
+        ings.forEach(i=>{
+          const n = calcIngredientNutrition(i);
+          if(n){rt.kcal+=n.kcal;rt.protein+=n.protein;rt.fat+=n.fat;rt.carbs+=n.carbs;rt.salt+=n.salt;}
+        });
+        const factor = c.qty/rqty;
+        total.kcal+=rt.kcal*factor;total.protein+=rt.protein*factor;total.fat+=rt.fat*factor;total.carbs+=rt.carbs*factor;total.salt+=rt.salt*factor;
+      }
+    } else {
+      const n = calcIngredientNutrition(c);
+      if(n){total.kcal+=n.kcal;total.protein+=n.protein;total.fat+=n.fat;total.carbs+=n.carbs;total.salt+=n.salt;}
+      else missing.push(c.name);
+    }
+  });
+  const el = document.getElementById('nutrition-result-'+menuId);
+  if(!el) return;
+  el.innerHTML = `
+    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;">
+      <p style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">栄養成分表示（1個あたり）</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 4px;color:var(--text2);">エネルギー</td><td style="padding:5px 4px;text-align:right;font-weight:500;">${total.kcal.toFixed(1)} kcal</td></tr>
+        <tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 4px;color:var(--text2);">タンパク質</td><td style="padding:5px 4px;text-align:right;font-weight:500;">${total.protein.toFixed(1)} g</td></tr>
+        <tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 4px;color:var(--text2);">脂質</td><td style="padding:5px 4px;text-align:right;font-weight:500;">${total.fat.toFixed(1)} g</td></tr>
+        <tr style="border-bottom:1px solid var(--border);"><td style="padding:5px 4px;color:var(--text2);">炭水化物</td><td style="padding:5px 4px;text-align:right;font-weight:500;">${total.carbs.toFixed(1)} g</td></tr>
+        <tr><td style="padding:5px 4px;color:var(--text2);">食塩相当量</td><td style="padding:5px 4px;text-align:right;font-weight:500;">${total.salt.toFixed(2)} g</td></tr>
+      </table>
+    </div>
+    ${missing.length>0?`<div class="warning-box">⚠️ 栄養成分未登録の食材：${missing.join('、')}</div>`:'<div style="font-size:12px;color:var(--green);">✓ 全食材の栄養成分が登録済みです</div>'}
+  `;
+}
+
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal'))
+    document.getElementById('modal').style.display='none';
+}
+
+// ---- CSV取込モード切替 ----
+function setImportMode(mode){
+  ['menu','recipe','master'].forEach(m=>{
+    document.getElementById('import-'+m+'-panel').style.display=m===mode?'block':'none';
+    document.getElementById('mode-'+m+'-btn').className='btn btn-sm'+(m===mode?' btn-primary':'');
+  });
+}
+
+// ---- メニューCSV取込 ----
+let pendingMenuFiles=[];
+
+function parseFilletMenuCSV(text, filename){
+  const lines=text.trim().split('\n');
+  if(lines.length<2) return null;
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const nameIdx=headers.findIndex(h=>h==='name');
+  const amountIdx=headers.findIndex(h=>h==='amount');
+  const unitIdx=headers.findIndex(h=>h==='unit');
+  const costIdx=headers.findIndex(h=>h.includes('food cost')&&!h.includes('percent'));
+  const isRecipeIdx=headers.findIndex(h=>h.includes('is recipe')||h.includes('recipe?'));
+  if(nameIdx<0) return null;
+  const parseCost=v=>parseFloat((v||'').replace(/[￥,\s]/g,''))||0;
+  const parseNum=v=>parseFloat((v||'').replace(/,/g,''))||0;
+  const menuName=filename.replace(/\.csv$/i,'').replace(/_/g,' ');
+  const components=lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur);cur='';}else cur+=c;}
+    cols.push(cur);
+    const cost=costIdx>=0?parseCost(cols[costIdx]):0;
+    const qty=amountIdx>=0?parseNum(cols[amountIdx]):0;
+    const isRecipe=isRecipeIdx>=0?(cols[isRecipeIdx]||'').trim().toLowerCase()==='true':false;
+    return{name:(cols[nameIdx]||'').trim(),qty,unit:unitIdx>=0?(cols[unitIdx]||'').trim()||'':'' ,cost,isRecipe};
+  }).filter(c=>c.name);
+  const total=components.reduce((s,c)=>s+c.cost,0);
+  return{menuName,components,total};
+}
+
+function handleMenuDrop(e){e.preventDefault();processMenuFiles(e.dataTransfer.files);}
+function handleMenuFiles(e){processMenuFiles(e.target.files);}
+
+function processMenuFiles(fileList){
+  pendingMenuFiles=[];
+  document.getElementById('menu-file-list').innerHTML='';
+  document.getElementById('menu-import-actions').style.display='none';
+  const files=Array.from(fileList);
+  if(!files.length) return;
+  let done=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      pendingMenuFiles.push({file:file.name,result:parseFilletMenuCSV(ev.target.result,file.name)});
+      if(++done===files.length) renderMenuFileList();
+    };
+    reader.readAsText(file,'UTF-8');
+  });
+}
+
+function renderMenuFileList(){
+  const el=document.getElementById('menu-file-list');
+  const okCount=pendingMenuFiles.filter(f=>f.result).length;
+  el.innerHTML=pendingMenuFiles.map(f=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:6px;font-size:13px;">
+      <div>
+        <span style="font-weight:500;">${f.result?f.result.menuName:f.file}</span>
+        ${f.result?`<span style="font-size:11px;color:var(--text2);margin-left:6px;">${f.result.components.length}構成 / 原価${f.result.total.toFixed(0)}円</span>`:''}
+      </div>
+      <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${f.result?'background:var(--green-bg);color:var(--green)':'background:var(--red-bg);color:var(--red)'}">${f.result?'✓ OK':'✗ エラー'}</span>
+    </div>`).join('');
+  document.getElementById('menu-import-summary').textContent=`${okCount}件取込可能`;
+  document.getElementById('menu-import-actions').style.display='block';
+}
+
+async function doMenuImport(){
+  const btn=document.getElementById('do-menu-import-btn');
+  btn.disabled=true; btn.textContent='取込中...';
+  const ok=pendingMenuFiles.filter(f=>f.result);
+  if(!ok.length){alert('取込できるファイルがありません');btn.disabled=false;btn.textContent='一括取込・共有';return;}
+  setSyncing();
+  const toInsert=[], toUpdate=[];
+  ok.forEach(({result:{menuName,components}})=>{
+    // 食材マスター＋レシピ単価で再計算
+    const {components:recalcedComps, total} = calcMenuWithMaster(components, recipes);
+    const obj={name:menuName,components:recalcedComps,total,price:0,rate:null};
+    const ex=menus.find(m=>m.name===menuName);
+    if(ex) toUpdate.push({...obj,id:ex.id});
+    else toInsert.push(obj);
+  });
+  const promises=[];
+  if(toInsert.length) promises.push(sb.from('menus').insert(toInsert));
+  toUpdate.forEach(({id,...data})=>promises.push(sb.from('menus').update(data).eq('id',id)));
+  await Promise.all(promises);
+  await loadAll();
+  btn.disabled=false; btn.textContent='一括取込・共有';
+  alert(`✅ ${ok.length}件のメニューを食材マスター単価で計算して取込みました！`);
+  resetMenuImport();
+}
+
+function resetMenuImport(){
+  pendingMenuFiles=[];
+  document.getElementById('menu-file-list').innerHTML='';
+  document.getElementById('menu-import-actions').style.display='none';
+  document.getElementById('menufiles').value='';
+}
+
+// ---- レシピCSV取込 ----
+let pendingFiles=[];
+
+function parseFilletCSV(text,filename){
+  const lines=text.trim().split('\n');
+  if(lines.length<2) return null;
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const nameIdx=headers.findIndex(h=>h==='name');
+  const amountIdx=headers.findIndex(h=>h==='amount');
+  const unitIdx=headers.findIndex(h=>h==='unit');
+  const costIdx=headers.findIndex(h=>h.includes('food cost')&&!h.includes('percent'));
+  if(nameIdx<0) return null;
+  const parseCost=v=>parseFloat((v||'').replace(/[￥,\s]/g,''))||0;
+  const parseNum=v=>parseFloat((v||'').replace(/,/g,''))||0;
+  const recipeName=filename.replace(/\.csv$/i,'').replace(/_/g,' ');
+  const ingredients=lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur);cur='';}else cur+=c;}
+    cols.push(cur);
+    const cost=costIdx>=0?parseCost(cols[costIdx]):0;
+    const qty=amountIdx>=0?parseNum(cols[amountIdx]):0;
+    return{name:(cols[nameIdx]||'').trim(),qty,unit:unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g',cost,price:qty?parseFloat((cost/qty).toFixed(4)):0};
+  }).filter(i=>i.name);
+  const totalCost=ingredients.reduce((s,i)=>s+i.cost,0);
+
+  // 総量を自動計算
+  const weightUnits=['g','kg','ml','l'];
+  const countUnits=['個','枚','本','粒','台','食分','セット','筱','丁','枝'];
+  const unitTotals={};
+  ingredients.forEach(i=>{
+    let normUnit=i.unit, normQty=i.qty;
+    if(i.unit==='kg'){normUnit='g';normQty=i.qty*1000;}
+    else if(i.unit==='l'){normUnit='ml';normQty=i.qty*1000;}
+    if(weightUnits.includes(normUnit)){
+      if(!unitTotals[normUnit]) unitTotals[normUnit]=0;
+      unitTotals[normUnit]+=normQty;
+    }
+  });
+  let total_qty=0, total_unit='g';
+  const countIng=ingredients.find(i=>countUnits.includes(i.unit));
+  if(countIng){
+    total_qty=1; total_unit=countIng.unit;
+  } else if(Object.keys(unitTotals).length>0){
+    Object.entries(unitTotals).forEach(([u,q])=>{if(q>total_qty){total_qty=q;total_unit=u;}});
+    total_qty=parseFloat(total_qty.toFixed(2));
+  }
+  return{recipeName,ingredients,totalCost,total_qty,total_unit};
+}
+
+function handleDrop(e){e.preventDefault();processFileList(e.dataTransfer.files);}
+function handleFiles(e){processFileList(e.target.files);}
+
+function processFileList(fileList){
+  pendingFiles=[];
+  document.getElementById('file-list').innerHTML='';
+  document.getElementById('import-actions').style.display='none';
+  const files=Array.from(fileList);
+  if(!files.length) return;
+  let done=0;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      pendingFiles.push({file:file.name,result:parseFilletCSV(ev.target.result,file.name)});
+      if(++done===files.length) renderFileList();
+    };
+    reader.readAsText(file,'UTF-8');
+  });
+}
+
+function renderFileList(){
+  const el=document.getElementById('file-list');
+  const okCount=pendingFiles.filter(f=>f.result).length;
+  el.innerHTML=pendingFiles.map(f=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:6px;font-size:13px;">
+      <div>
+        <span style="font-weight:500;">${f.result?f.result.recipeName:f.file}</span>
+        ${f.result?`<span style="font-size:11px;color:var(--text2);margin-left:6px;">${f.result.ingredients.length}材料 / ${f.result.totalCost.toFixed(0)}円</span>`:''}
+      </div>
+      <span style="font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;${f.result?'background:var(--green-bg);color:var(--green)':'background:var(--red-bg);color:var(--red)'}">${f.result?'✓ OK':'✗ エラー'}</span>
+    </div>`).join('');
+  document.getElementById('import-summary').textContent=`${okCount}件取込可能`;
+  document.getElementById('import-actions').style.display='block';
+}
+
+// ---- 単価計算ヘルパー ----
+// 食材マスターから単価(円/単位)を取得
+function getMasterUnitPrice(name, unit){
+  const m = masterData.find(x=>x.name===name);
+  if(!m || !m.qty || !m.price) return null;
+  // 単位が一致する場合のみ計算
+  if(m.unit === unit) return m.price / m.qty;
+  // kg→g, l→ml変換
+  if(m.unit==='kg' && unit==='g') return m.price / (m.qty*1000);
+  if(m.unit==='g' && unit==='kg') return m.price / (m.qty/1000);
+  if(m.unit==='l' && unit==='ml') return m.price / (m.qty*1000);
+  if(m.unit==='ml' && unit==='l') return m.price / (m.qty/1000);
+  return null;
+}
+
+// レシピの材料を食材マスター単価で再計算
+function calcRecipeWithMaster(ingredients){
+  let total = 0;
+  const recalcedIngs = ingredients.map(i=>{
+    const unitPrice = getMasterUnitPrice(i.name, i.unit);
+    const cost = unitPrice!=null ? i.qty * unitPrice : (i.cost||0);
+    total += cost;
+    return {...i, price: unitPrice||i.price, cost};
+  });
+  return {ingredients: recalcedIngs, total};
+}
+
+// メニューの構成要素を食材マスター＋レシピで再計算
+function calcMenuWithMaster(components, recalcedRecipes){
+  let total = 0;
+  const recalcedComps = components.map(c=>{
+    let cost = 0;
+    if(c.isRecipe){
+      // サブレシピの場合：total_qtyが設定されていれば 原価合計/total_qty × 使用量
+      const r = recalcedRecipes.find(x=>x.name===c.name);
+      if(r){
+        if(r.total_qty && r.total){
+          // 総量ベースで単価計算（正しい方法）
+          // 単位変換も考慮
+          let useQty = c.qty;
+          if(r.total_unit==='kg' && c.unit==='g') useQty = c.qty/1000;
+          else if(r.total_unit==='g' && c.unit==='kg') useQty = c.qty*1000;
+          else if(r.total_unit==='l' && c.unit==='ml') useQty = c.qty/1000;
+          else if(r.total_unit==='ml' && c.unit==='l') useQty = c.qty*1000;
+          cost = (r.total / r.total_qty) * useQty;
+        } else if(r.unit){
+          // total_qty未設定の場合は旧方式（1個あたり原価）
+          cost = r.unit * c.qty;
+        } else {
+          cost = c.cost||0;
+        }
+      } else {
+        cost = c.cost||0;
+      }
+    } else {
+      // 材料の場合：食材マスター単価で計算
+      const unitPrice = getMasterUnitPrice(c.name, c.unit);
+      cost = unitPrice!=null ? c.qty * unitPrice : (c.cost||0);
+    }
+    total += cost;
+    return {...c, cost};
+  });
+  return {components: recalcedComps, total};
+}
+
+// 全レシピ・メニューを一括再計算
+async function recalcAll(){
+  if(!masterData.length){alert('食材マスターが読み込まれていません');return;}
+  const btn = document.querySelector('[onclick="recalcAll()"]');
+  btn.disabled=true; btn.textContent='再計算中...';
+  setSyncing();
+
+  // Step1: レシピを再計算
+  const recalcedRecipes = recipes.map(r=>{
+    const ings = Array.isArray(r.ingredients)?r.ingredients:[];
+    const {ingredients, total} = calcRecipeWithMaster(ings);
+    // total_qtyが設定されていれば総量ベース、なければ旧方式
+    const unit = r.total_qty ? total/r.total_qty : (r.yield ? total/r.yield : total);
+    return {...r, ingredients, total, unit};
+  });
+
+  // Step2: メニューを再計算（レシピの新単価を使う）
+  const recalcedMenus = menus.map(m=>{
+    const comps = Array.isArray(m.components)?m.components:[];
+    const {components, total} = calcMenuWithMaster(comps, recalcedRecipes);
+    const rate = m.price&&total ? total/m.price*100 : null;
+    return {...m, components, total, rate};
+  });
+
+  // Step3: Supabaseに保存（チャンク処理）
+  const chunkSize = 20;
+  for(let i=0;i<recalcedRecipes.length;i+=chunkSize){
+    const chunk = recalcedRecipes.slice(i,i+chunkSize);
+    await Promise.all(chunk.map(r=>{
+      const {id,...d}=r;
+      return sb.from('recipes').update({ingredients:d.ingredients,total:d.total,unit:d.unit,total_qty:d.total_qty,total_unit:d.total_unit}).eq('id',id);
+    }));
+  }
+  for(let i=0;i<recalcedMenus.length;i+=chunkSize){
+    const chunk = recalcedMenus.slice(i,i+chunkSize);
+    await Promise.all(chunk.map(m=>{
+      const {id,...d}=m;
+      return sb.from('menus').update({components:d.components,total:d.total,rate:d.rate}).eq('id',id);
+    }));
+  }
+
+  await loadAll();
+  btn.disabled=false; btn.textContent='🔄 全レシピ・メニューを再計算';
+  alert(`✅ 再計算完了！\nレシピ${recalcedRecipes.length}件・メニュー${recalcedMenus.length}件を食材マスター単価で更新しました。`);
+}
+
+async function doImport(){
+  const btn=document.getElementById('do-import-btn');
+  btn.disabled=true; btn.textContent='取込中...';
+  const ok=pendingFiles.filter(f=>f.result);
+  if(!ok.length){alert('取込できるファイルがありません');btn.disabled=false;btn.textContent='一括取込・共有';return;}
+  setSyncing();
+  const toInsert=[],toUpdate=[];
+  ok.forEach(({result:{recipeName,ingredients,totalCost,total_qty,total_unit}})=>{
+    // 食材マスター単価で再計算
+    const {ingredients:recalcedIngs, total} = calcRecipeWithMaster(
+      ingredients.map(i=>({...i,cost:i.cost||0}))
+    );
+    // total_qtyが設定されていれば総量ベースの単価、なければ合計原価をそのまま
+    const unit = total_qty ? total/total_qty : total;
+    const recipe={name:recipeName,cat:'その他',yield:1,price:0,
+      ingredients:recalcedIngs, total, unit, rate:null, total_qty, total_unit};
+    const ex=recipes.find(r=>r.name===recipeName);
+    if(ex) toUpdate.push({...recipe,id:ex.id}); else toInsert.push(recipe);
+  });
+  const promises=[];
+  if(toInsert.length) promises.push(sb.from('recipes').insert(toInsert));
+  toUpdate.forEach(({id,...d})=>promises.push(sb.from('recipes').update(d).eq('id',id)));
+  await Promise.all(promises);
+  await loadAll();
+  btn.disabled=false; btn.textContent='一括取込・共有';
+  alert(`✅ ${ok.length}件のレシピを食材マスター単価で計算して取込みました！`);
+  resetImport();
+}
+
+function resetImport(){
+  pendingFiles=[];
+  document.getElementById('file-list').innerHTML='';
+  document.getElementById('import-actions').style.display='none';
+  document.getElementById('csvfiles').value='';
+}
+
+// ---- 食材マスターCSV取込 ----
+let pendingMasterItems=[];
+
+function parseFilletMasterCSV(text){
+  const lines=text.trim().split('\n');
+  if(lines.length<2) return null;
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const vendorIdx=headers.findIndex(h=>h.includes('vendor'));
+  const nameIdx=headers.findIndex(h=>h.includes('ingredient'));
+  const amountIdx=headers.findIndex(h=>h.includes('amount'));
+  const unitIdx=headers.findIndex(h=>h.includes('unit'));
+  const priceIdx=headers.findIndex(h=>h.includes('price'));
+  if(nameIdx<0||priceIdx<0) return null;
+  const parseNum=v=>parseFloat((v||'').replace(/[,\s"]/g,''))||0;
+  const items=lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const cols=[];let cur='',inQ=false;
+    for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur);cur='';}else cur+=c;}
+    cols.push(cur);
+    return{vendor:vendorIdx>=0?(cols[vendorIdx]||'').trim():'',name:(cols[nameIdx]||'').trim(),qty:amountIdx>=0?parseNum(cols[amountIdx]):1,unit:unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g',price:parseNum(cols[priceIdx])};
+  }).filter(i=>i.name&&i.price>0);
+  return items;
+}
+
+function handleMasterDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f) readMasterFile(f);}
+function handleMasterFile(e){const f=e.target.files[0];if(f) readMasterFile(f);}
+
+function readMasterFile(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const items=parseFilletMasterCSV(ev.target.result);
+    if(!items){alert('フォーマットが認識できませんでした');return;}
+    pendingMasterItems=items;
+    renderMasterPreview();
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+function renderMasterPreview(){
+  const el=document.getElementById('master-preview');
+  const preview=pendingMasterItems.slice(0,5);
+  el.innerHTML=`
+    <p style="font-size:12px;color:var(--text2);margin:8px 0 6px;">プレビュー（先頭5件）</p>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <tr style="background:var(--bg2);">
+          <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);">業者</th>
+          <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);">食材名</th>
+          <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);">量</th>
+          <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);">価格</th>
+        </tr>
+        ${preview.map(i=>`<tr>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text2);">${i.vendor}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--border);font-weight:500;">${i.name}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--border);">${i.qty}${i.unit}</td>
+          <td style="padding:5px 8px;border-bottom:1px solid var(--border);">¥${i.price.toLocaleString()}</td>
+        </tr>`).join('')}
+      </table>
+    </div>`;
+  document.getElementById('master-import-summary').textContent=`${pendingMasterItems.length}件の食材を取込可能`;
+  document.getElementById('master-import-actions').style.display='block';
+}
+
+async function doMasterImport(){
+  const btn=document.getElementById('do-master-import-btn');
+  btn.disabled=true; btn.textContent='取込中...';
+  if(!pendingMasterItems.length){alert('データがありません');btn.disabled=false;btn.textContent='取込・共有';return;}
+  setSyncing();
+  await sb.from('master_ingredients').delete().neq('id',0);
+  const chunkSize=50;
+  for(let i=0;i<pendingMasterItems.length;i+=chunkSize){
+    const chunk=pendingMasterItems.slice(i,i+chunkSize);
+    const res=await sb.from('master_ingredients').insert(chunk);
+    if(res.error){setError('保存失敗');console.error(res.error);btn.disabled=false;btn.textContent='取込・共有';return;}
+  }
+  await loadAll();
+  btn.disabled=false; btn.textContent='取込・共有';
+  alert(`✅ ${pendingMasterItems.length}件の食材マスターを取込みました！`);
+  resetMasterImport();
+}
+
+function resetMasterImport(){
+  pendingMasterItems=[];
+  document.getElementById('master-preview').innerHTML='';
+  document.getElementById('master-import-actions').style.display='none';
+  document.getElementById('mastercsv').value='';
+}
+
+// ---- 初期化 ----
+loadAll();
+</script>
+</body>
+</html>
