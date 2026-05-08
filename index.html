@@ -548,10 +548,12 @@ async function loadAll(){
 
 // ---- タブ切替 ----
 function sw(t){
-  ['menu','recipe','master','import'].forEach((s,i)=>{
+  ['menu','recipe','master','import','label'].forEach((s,i)=>{
     document.querySelectorAll('.tab')[i].classList.toggle('active',s===t);
     document.getElementById('tab-'+s).classList.toggle('active',s===t);
   });
+  if(t==='master') renderMaster();
+  if(t==='label') initLabelTab();
 }
 
 // ---- メニュー一覧 ----
