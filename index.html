@@ -604,7 +604,7 @@ function openMenuDetail(id){
         <td>${c.qty}</td>
         <td>${c.unit}</td>
         <td>${c.cost?c.cost.toFixed(0)+'円':'—'}</td>
-        <td><span class="${c.isRecipe?'sub-badge':''}"">${c.isRecipe?'レシピ':'材料'}</span></td>
+        <td>${c.isRecipe?`<span class="sub-badge" onclick="jumpToRecipe('${c.name.replace(/'/g,String.fromCharCode(39))}')" style="cursor:pointer;text-decoration:underline;" title="タップでレシピを開く">レシピ →</span>`:'<span>材料</span>'}</td>
       </tr>`).join('')}
     </table>
     <hr class="divider"/>
@@ -660,6 +660,17 @@ function renderList(){
       </div>
       <span style="color:var(--text3);font-size:16px;">›</span>
     </div>`).join('');
+}
+
+
+// サブレシピにジャンプ
+function jumpToRecipe(name){
+  const r = recipes.find(x=>x.name===name);
+  if(r){
+    openRecipeDetail(r.id);
+  } else {
+    alert('レシピ「'+name+'」が見つかりません。レシピCSVを取込んでください。');
+  }
 }
 
 function openRecipeDetail(id){
@@ -1066,7 +1077,7 @@ function parseFilletMenuCSV(text, filename){
   if(nameIdx<0) return null;
   const parseCost=v=>parseFloat((v||'').replace(/[￥,\s]/g,''))||0;
   const parseNum=v=>parseFloat((v||'').replace(/,/g,''))||0;
-  const menuName=filename.replace(/\.csv$/i,'').replace(/_/g,' ');
+  const menuName=filename.replace(/\.csv$/i,'').replace(/_/g,' ').normalize('NFC');
   const components=lines.slice(1).filter(l=>l.trim()).map(line=>{
     const cols=[];let cur='',inQ=false;
     for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur);cur='';}else cur+=c;}
@@ -1074,7 +1085,7 @@ function parseFilletMenuCSV(text, filename){
     const cost=costIdx>=0?parseCost(cols[costIdx]):0;
     const qty=amountIdx>=0?parseNum(cols[amountIdx]):0;
     const isRecipe=isRecipeIdx>=0?(cols[isRecipeIdx]||'').trim().toLowerCase()==='true':false;
-    return{name:(cols[nameIdx]||'').trim(),qty,unit:unitIdx>=0?(cols[unitIdx]||'').trim()||'':'' ,cost,isRecipe};
+    return{name:((cols[nameIdx]||'').trim()).normalize('NFC'),qty,unit:(unitIdx>=0?(cols[unitIdx]||'').trim()||'':'').normalize('NFC'),cost,isRecipe};
   }).filter(c=>c.name);
   const total=components.reduce((s,c)=>s+c.cost,0);
   return{menuName,components,total};
@@ -1161,14 +1172,14 @@ function parseFilletCSV(text,filename){
   if(nameIdx<0) return null;
   const parseCost=v=>parseFloat((v||'').replace(/[￥,\s]/g,''))||0;
   const parseNum=v=>parseFloat((v||'').replace(/,/g,''))||0;
-  const recipeName=filename.replace(/\.csv$/i,'').replace(/_/g,' ');
+  const recipeName=filename.replace(/\.csv$/i,'').replace(/_/g,' ').normalize('NFC');
   const ingredients=lines.slice(1).filter(l=>l.trim()).map(line=>{
     const cols=[];let cur='',inQ=false;
     for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur);cur='';}else cur+=c;}
     cols.push(cur);
     const cost=costIdx>=0?parseCost(cols[costIdx]):0;
     const qty=amountIdx>=0?parseNum(cols[amountIdx]):0;
-    return{name:(cols[nameIdx]||'').trim(),qty,unit:unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g',cost,price:qty?parseFloat((cost/qty).toFixed(4)):0};
+    return{name:((cols[nameIdx]||'').trim()).normalize('NFC'),qty,unit:(unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g').normalize('NFC'),cost,price:qty?parseFloat((cost/qty).toFixed(4)):0};
   }).filter(i=>i.name);
   const totalCost=ingredients.reduce((s,i)=>s+i.cost,0);
 
@@ -1396,7 +1407,7 @@ function parseFilletMasterCSV(text){
     const cols=[];let cur='',inQ=false;
     for(let c of line){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur);cur='';}else cur+=c;}
     cols.push(cur);
-    return{vendor:vendorIdx>=0?(cols[vendorIdx]||'').trim():'',name:(cols[nameIdx]||'').trim(),qty:amountIdx>=0?parseNum(cols[amountIdx]):1,unit:unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g',price:parseNum(cols[priceIdx])};
+    return{vendor:(vendorIdx>=0?(cols[vendorIdx]||'').trim():'').normalize('NFC'),name:((cols[nameIdx]||'').trim()).normalize('NFC'),qty:amountIdx>=0?parseNum(cols[amountIdx]):1,unit:(unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g').normalize('NFC'),price:parseNum(cols[priceIdx])};
   }).filter(i=>i.name&&i.price>0);
   return items;
 }
