@@ -472,8 +472,7 @@ function previewLabel(){
         <table style="width:100%;border-collapse:collapse;font-size:8px;">
           <tr><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;white-space:nowrap;width:40%;">商品名</td><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;">${m.name}</td></tr>
           <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">名称</td><td style="border:0.5px solid #333;padding:2px 4px;">${category}</td></tr>
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:2px 4px;">${ingredients.replace(/
-/g,'<br>')}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:2px 4px;">${ingredients.replace(/\n/g,'<br>')}</td></tr>
           <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">内容量</td><td style="border:0.5px solid #333;padding:2px 4px;">${content}</td></tr>
           ${expiry?`<tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">賞味期限</td><td style="border:0.5px solid #333;padding:2px 4px;">${expiryStr}</td></tr>`:''}
           <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">保存方法</td><td style="border:0.5px solid #333;padding:2px 4px;">${storage}</td></tr>
