@@ -949,6 +949,14 @@ function renderMasterTable(){
     </div>`).join('');
 }
 
+
+function fillGroupDatalist(){
+  const dl = document.getElementById('mf-group-list');
+  if(!dl) return;
+  const groups = [...new Set(ingredientGroups.map(g=>g.group_name))].sort();
+  dl.innerHTML = groups.map(g=>`<option value="${g}">`).join('');
+}
+
 function openAddMaster(){
   document.getElementById('modal-body').innerHTML=`
     <div style="margin-bottom:14px;">
@@ -960,6 +968,7 @@ function openAddMaster(){
       <button class="btn btn-primary" type="button" onclick="saveMasterAdd()">追加・共有</button>
     </div>`;
   document.getElementById('modal').style.display='flex';
+  fillGroupDatalist();
 }
 
 function openEditMaster(id){
@@ -975,6 +984,11 @@ function openEditMaster(id){
       <button class="btn btn-primary" type="button" onclick="saveMasterEdit(${id})">保存・共有</button>
     </div>`;
   document.getElementById('modal').style.display='flex';
+  // グループリストを設定
+  fillGroupDatalist();
+  // 既存グループを設定
+  const existing = ingredientGroups.find(g=>g.ingredient_name===m.name);
+  if(existing) document.getElementById('mf-group').value = existing.group_name;
 }
 
 function masterFormHTML(m={}){
@@ -1012,12 +1026,28 @@ function masterFormHTML(m={}){
     </div>`;
 }
 
+
+async function saveIngredientGroup(ingredientName){
+  const groupName = document.getElementById('mf-group')?.value.trim();
+  if(!groupName) return; // 未入力の場合はスキップ
+  const existing = ingredientGroups.find(g=>g.ingredient_name===ingredientName);
+  if(existing){
+    if(existing.group_name !== groupName){
+      await sb.from('ingredient_groups').update({group_name:groupName}).eq('id',existing.id);
+    }
+  } else {
+    await sb.from('ingredient_groups').insert({ingredient_name:ingredientName, group_name:groupName});
+  }
+}
+
 async function saveMasterAdd(){
   const item=getMasterFormData();
   if(!item) return;
   setSyncing();
   const res=await sb.from('master_ingredients').insert(item);
   if(res.error){setError('保存失敗');return;}
+  // グループ設定を保存
+  await saveIngredientGroup(item.name);
   await loadAll();
   closeModal();
   alert(`「${item.name}」を追加しました！`);
@@ -1029,6 +1059,8 @@ async function saveMasterEdit(id){
   setSyncing();
   const res=await sb.from('master_ingredients').update(item).eq('id',id);
   if(res.error){setError('保存失敗');return;}
+  // グループ設定を保存
+  await saveIngredientGroup(item.name);
   await loadAll();
   closeModal();
   alert(`「${item.name}」を更新しました！`);
