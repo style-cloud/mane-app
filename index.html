@@ -945,6 +945,7 @@ function renderMasterTable(){
       </div>
       <div style="font-size:12px;color:var(--text2);">
         購入単位：${m.qty}${m.unit}　価格：¥${(m.price||0).toLocaleString()}　単価：¥${m.qty?(m.price/m.qty).toFixed(2):'-'}/${m.unit}
+        ${(()=>{const g=ingredientGroups.find(x=>x.ingredient_name===m.name);return g?`　<span style="display:inline-block;font-size:10px;padding:1px 7px;border-radius:4px;background:var(--blue-bg);color:var(--blue);font-weight:500;">グループ：${g.group_name}</span>`:''})()}
       </div>
     </div>`).join('');
 }
@@ -1007,6 +1008,12 @@ function masterFormHTML(m={}){
       <input type="number" id="mf-price" value="${m.price||''}" placeholder="800" style="width:120px;flex:none;"/>
       <span style="font-size:13px;color:var(--text2);">円</span>
     </div>
+    <div class="form-row">
+      <span class="form-label">グループ名</span>
+      <input type="text" id="mf-group" list="mf-group-list" placeholder="例：小麦粉（任意）" style="flex:1;"/>
+      <datalist id="mf-group-list"></datalist>
+    </div>
+    <p style="font-size:11px;color:var(--text2);margin:-6px 0 10px 86px;">ラベル印刷時に同じグループ名でまとめて表示されます</p>
     <div style="margin:10px 0 6px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
         <input type="checkbox" id="mf-packaging" ${m.is_packaging?'checked':''} style="width:16px;height:16px;flex:none;"/>
