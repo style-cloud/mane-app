@@ -739,7 +739,7 @@ function sw(t){
     document.querySelectorAll('.tab')[i].classList.toggle('active',s===t);
     document.getElementById('tab-'+s).classList.toggle('active',s===t);
   });
-  if(t==='master') renderMaster();
+  if(t==='master') renderMasterTable();
   if(t==='label') initLabelTab();
 }
 
