@@ -136,6 +136,7 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
       <button class="btn btn-primary btn-sm" type="button" onclick="openAddMaster()">＋ 新規追加</button>
       <button class="btn btn-sm" type="button" onclick="recalcAll()">🔄 全レシピ・メニューを再計算</button>
+      <button class="btn btn-sm" type="button" onclick="openGroupManager()">📋 グループ設定</button>
     </div>
     <div id="master-list"><div class="empty"><span class="spinner"></span>読み込み中...</div></div>
   </div>
@@ -255,7 +256,10 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
         <div class="form-row"><span class="form-label">名称</span><input type="text" id="lb-category" placeholder="焼菓子"/></div>
         <div class="form-row" style="align-items:flex-start;">
           <span class="form-label" style="margin-top:8px;">原材料名</span>
-          <textarea id="lb-ingredients" rows="3" style="flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;resize:vertical;font-family:inherit;" placeholder="小麦粉（国内産）、バター、砂糖、卵、塩&#10;（小麦、卵、乳成分を含む）"></textarea>
+          <div style="flex:1;">
+            <textarea id="lb-ingredients" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;resize:vertical;font-family:inherit;" placeholder="小麦粉（国内産）、バター、砂糖、卵、塩&#10;（小麦、卵、乳成分を含む）"></textarea>
+            <button class="btn btn-sm" type="button" onclick="regenIngredients()" style="margin-top:4px;font-size:12px;">🔄 原材料を自動生成</button>
+          </div>
         </div>
         <div class="form-row"><span class="form-label">内容量</span><input type="text" id="lb-content" placeholder="1枚"/></div>
         <div class="form-row" style="align-items:flex-start;">
@@ -301,7 +305,7 @@ const SUPABASE_URL = 'https://wgkqowmbhpazkabvfehj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indna3Fvd21iaHBhemthYnZmZWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTU0NDgsImV4cCI6MjA5MzY3MTQ0OH0.wDBqhQg4rOnO4RY2CtuQ-8075NLCxcqQWmgynXijCL8';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let menus=[], recipes=[], masterData=[];
+let menus=[], recipes=[], masterData=[], ingredientGroups=[];
 
 function setSyncing(){ document.getElementById('sdot').className='sync-dot loading'; document.getElementById('stxt').textContent='保存中...'; }
 function setSynced(){ document.getElementById('sdot').className='sync-dot'; document.getElementById('stxt').textContent='全スタッフと同期済み'; }
@@ -326,6 +330,20 @@ function initLabelTab(){
     labelSettings = JSON.parse(saved);
     document.getElementById('lb-manufacturer').value = labelSettings.manufacturer||'';
     document.getElementById('lb-address').value = labelSettings.address||'';
+  }
+}
+
+
+function regenIngredients(){
+  const menuId = document.getElementById('lb-menu-select').value;
+  if(!menuId){alert('商品を選択してください');return;}
+  const m = menus.find(x=>x.id==menuId);
+  if(!m){return;}
+  const auto = generateIngredientsList(m);
+  if(auto){
+    document.getElementById('lb-ingredients').value = auto;
+  } else {
+    alert('原材料を自動生成できませんでした。\n食材マスターのデータを確認してください。');
   }
 }
 
@@ -382,14 +400,90 @@ async function loadLabelInfo(){
       labelInfoCache[menuId] = res.data;
     } else {
       document.getElementById('lb-category').value = '焼菓子';
-      document.getElementById('lb-ingredients').value = '';
-      document.getElementById('lb-content').value = '';
       document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
+      // 原材料を自動生成
+      const autoIngredients = generateIngredientsList(m);
+      if(autoIngredients){
+        document.getElementById('lb-ingredients').value = autoIngredients;
+      }
+      document.getElementById('lb-content').value = '';
     }
   }catch(e){
     document.getElementById('lb-category').value = '焼菓子';
     document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
+    const autoIngredients = generateIngredientsList(m);
+    if(autoIngredients) document.getElementById('lb-ingredients').value = autoIngredients;
   }
+}
+
+// ---- 原材料リスト自動生成 ----
+function expandIngredients(components, factor=1){
+  // 全材料を再帰的に展開して {name, grams} のリストにする
+  const result = [];
+  components.forEach(c=>{
+    if(c.is_packaging) return;
+    const master = masterData.find(x=>x.name===c.name);
+    if(master && master.is_packaging) return;
+
+    if(c.isRecipe){
+      // サブレシピを展開
+      const r = recipes.find(x=>x.name===c.name);
+      if(r && r.total_qty){
+        const ings = Array.isArray(r.ingredients)?r.ingredients:[];
+        const subFactor = (c.qty / r.total_qty) * factor;
+        // サブレシピの材料を展開
+        ings.forEach(i=>{
+          // gに換算
+          let grams = i.qty * subFactor;
+          if(i.unit==='kg') grams *= 1000;
+          result.push({name: i.name, grams});
+        });
+      } else {
+        // total_qty未設定の場合はそのまま
+        let grams = c.qty * factor;
+        result.push({name: c.name, grams});
+      }
+    } else {
+      // 通常材料
+      let grams = c.qty * factor;
+      if(c.unit==='kg') grams *= 1000;
+      result.push({name: c.name, grams});
+    }
+  });
+  return result;
+}
+
+function getGroupName(ingredientName){
+  const g = ingredientGroups.find(x=>x.ingredient_name===ingredientName);
+  return g ? g.group_name : ingredientName;
+}
+
+function generateIngredientsList(menu){
+  if(!menu) return '';
+  const comps = Array.isArray(menu.components)?menu.components:[];
+
+  // 全材料を展開
+  const allIngs = expandIngredients(comps);
+
+  // グループ名に変換してから合算
+  const ingMap = {};
+  allIngs.forEach(i=>{
+    if(!i.name) return;
+    const groupName = getGroupName(i.name);
+    if(ingMap[groupName]){
+      ingMap[groupName] += i.grams;
+    } else {
+      ingMap[groupName] = i.grams;
+    }
+  });
+
+  // 重量順に並べ替え
+  const sorted = Object.entries(ingMap)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([name])=>name);
+
+  if(!sorted.length) return '';
+  return sorted.join('、');
 }
 
 async function saveLabelInfo(){
@@ -525,13 +619,105 @@ function closeLabelModal(e){
     document.getElementById('label-modal').style.display='none';
 }
 
+
+// ---- グループ管理 ----
+function openGroupManager(){
+  renderGroupManagerModal();
+  document.getElementById('modal').style.display='flex';
+}
+
+function renderGroupManagerModal(){
+  const grouped = {};
+  ingredientGroups.forEach(g=>{
+    if(!grouped[g.group_name]) grouped[g.group_name]=[];
+    grouped[g.group_name].push(g);
+  });
+
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <p style="font-size:17px;font-weight:600;">グループ設定</p>
+      <button class="btn btn-primary btn-sm" type="button" onclick="openAddGroup()">＋ 追加</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">食材名と表示名（グループ名）を登録すると、ラベルの原材料名が自動変換されます。</p>
+    <div id="group-list">
+      ${Object.keys(grouped).length===0
+        ? '<p style="text-align:center;color:var(--text3);padding:2rem;">まだ登録がありません</p>'
+        : Object.entries(grouped).sort((a,b)=>a[0].localeCompare(b[0])).map(([gname, items])=>`
+          <div style="margin-bottom:12px;">
+            <p style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;padding:4px 8px;background:var(--bg2);border-radius:var(--radius-sm);">→ ${gname}</p>
+            ${items.map(item=>`
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:0.5px solid var(--border);">
+                <span style="font-size:13px;">${item.ingredient_name}</span>
+                <button class="btn btn-danger" type="button" onclick="deleteGroup(${item.id})" style="font-size:11px;padding:3px 8px;">削除</button>
+              </div>`).join('')}
+          </div>`).join('')
+      }
+    </div>
+  `;
+}
+
+function openAddGroup(){
+  // 食材マスターから未グループの食材を候補として表示
+  const grouped = ingredientGroups.map(g=>g.ingredient_name);
+  const candidates = masterData.filter(m=>!grouped.includes(m.name)).map(m=>m.name);
+
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <button class="btn btn-sm" type="button" onclick="renderGroupManagerModal()">← 戻る</button>
+      <p style="font-size:16px;font-weight:600;">グループを追加</p>
+    </div>
+    <div class="form-row">
+      <span class="form-label">食材名</span>
+      <input type="text" id="gi-name" list="gi-candidates" placeholder="例：特宝笠 小麦粉" style="flex:1;"/>
+      <datalist id="gi-candidates">
+        ${candidates.map(c=>`<option value="${c}">`).join('')}
+      </datalist>
+    </div>
+    <div class="form-row">
+      <span class="form-label">グループ名</span>
+      <input type="text" id="gi-group" list="gi-groups" placeholder="例：小麦粉" style="flex:1;"/>
+      <datalist id="gi-groups">
+        ${[...new Set(ingredientGroups.map(g=>g.group_name))].map(g=>`<option value="${g}">`).join('')}
+      </datalist>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">グループ名は既存のものを選ぶか、新しい名前を入力してください。</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" type="button" onclick="renderGroupManagerModal()">キャンセル</button>
+      <button class="btn btn-primary" type="button" onclick="saveGroup()">追加</button>
+    </div>
+  `;
+}
+
+async function saveGroup(){
+  const ingredient_name = document.getElementById('gi-name').value.trim();
+  const group_name = document.getElementById('gi-group').value.trim();
+  if(!ingredient_name){alert('食材名を入力してください');return;}
+  if(!group_name){alert('グループ名を入力してください');return;}
+  setSyncing();
+  const res = await sb.from('ingredient_groups').insert({ingredient_name, group_name});
+  if(res.error){setError('保存失敗');return;}
+  await loadAll();
+  setSynced();
+  renderGroupManagerModal();
+}
+
+async function deleteGroup(id){
+  if(!confirm('このグループ設定を削除しますか？'))return;
+  setSyncing();
+  await sb.from('ingredient_groups').delete().eq('id',id);
+  await loadAll();
+  setSynced();
+  renderGroupManagerModal();
+}
+
 // ---- データ読み込み ----
 async function loadAll(){
   try{
-    const [mRes, rRes, miRes] = await Promise.all([
+    const [mRes, rRes, miRes, igRes] = await Promise.all([
       sb.from('menus').select('*').order('name'),
       sb.from('recipes').select('*').order('name'),
-      sb.from('master_ingredients').select('*').order('name')
+      sb.from('master_ingredients').select('*').order('name'),
+      sb.from('ingredient_groups').select('*').order('group_name')
     ]);
     if(mRes.error) throw mRes.error;
     if(rRes.error) throw rRes.error;
@@ -539,6 +725,7 @@ async function loadAll(){
     menus = mRes.data||[];
     recipes = rRes.data||[];
     masterData = miRes.data||[];
+    ingredientGroups = igRes.data||[];
     setSynced();
     renderMenuList();
     renderList();
@@ -1365,11 +1552,14 @@ async function doImport(){
     const {ingredients:recalcedIngs, total} = calcRecipeWithMaster(
       ingredients.map(i=>({...i,cost:i.cost||0}))
     );
-    // total_qtyが設定されていれば総量ベースの単価、なければ合計原価をそのまま
-    const unit = total_qty ? total/total_qty : total;
-    const recipe={name:recipeName,cat:'その他',yield:1,price:0,
-      ingredients:recalcedIngs, total, unit, rate:null, total_qty, total_unit};
+    // 既存レシピのtotal_qtyが手動設定済みの場合は保持する
     const ex=recipes.find(r=>r.name===recipeName);
+    const finalTotalQty = ex && ex.total_qty ? ex.total_qty : total_qty;
+    const finalTotalUnit = ex && ex.total_unit ? ex.total_unit : total_unit;
+    const unit = finalTotalQty ? total/finalTotalQty : total;
+    const recipe={name:recipeName,cat:'その他',yield:1,price:0,
+      ingredients:recalcedIngs, total, unit, rate:null,
+      total_qty:finalTotalQty, total_unit:finalTotalUnit};
     if(ex) toUpdate.push({...recipe,id:ex.id}); else toInsert.push(recipe);
   });
   const promises=[];
