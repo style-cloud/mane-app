@@ -109,9 +109,12 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
 
   <!-- メニュー一覧 -->
   <div class="sec active" id="tab-menu">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <p style="font-size:15px;font-weight:600;">メニュー <span id="menu-count" style="font-size:13px;color:var(--text2);font-weight:400;"></span></p>
-      <input type="text" id="menu-search" placeholder="検索..." style="width:140px;font-size:13px;" oninput="renderMenuList()"/>
+      <input type="text" id="menu-search" placeholder="検索..." style="width:130px;font-size:13px;" oninput="renderMenuList()"/>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="btn btn-primary btn-sm" type="button" onclick="openAddMenu()">＋ 新規追加</button>
     </div>
     <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">完成品・販売商品の原価率を管理します。タップで詳細。</p>
     <div id="menu-list"><div class="empty"><span class="spinner"></span>読み込み中...</div></div>
@@ -119,9 +122,12 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
 
   <!-- レシピ一覧 -->
   <div class="sec" id="tab-recipe">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <p style="font-size:15px;font-weight:600;">レシピ <span id="recipe-count" style="font-size:13px;color:var(--text2);font-weight:400;"></span></p>
-      <input type="text" id="search" placeholder="検索..." style="width:140px;font-size:13px;" oninput="renderList()"/>
+      <input type="text" id="search" placeholder="検索..." style="width:130px;font-size:13px;" oninput="renderList()"/>
+    </div>
+    <div style="margin-bottom:10px;">
+      <button class="btn btn-primary btn-sm" type="button" onclick="openAddRecipe()">＋ 新規追加</button>
     </div>
     <p style="font-size:12px;color:var(--text3);margin-bottom:10px;">素材・パーツのレシピ一覧です。タップで詳細。</p>
     <div id="rlist"><div class="empty"><span class="spinner"></span>読み込み中...</div></div>
@@ -775,7 +781,10 @@ function openMenuDetail(id){
         <p style="font-size:17px;font-weight:600;">${m.name}</p>
         <p style="font-size:12px;color:var(--text2);margin-top:3px;">完成品メニュー</p>
       </div>
-      <button class="btn btn-danger" type="button" onclick="delMenu(${m.id})">削除</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" type="button" onclick="openEditMenu(${m.id})">✏️ 編集</button>
+        <button class="btn btn-danger" type="button" onclick="delMenu(${m.id})">削除</button>
+      </div>
     </div>
     <div class="metrics">
       <div class="met"><div class="met-label">原価合計</div><div class="met-value">${m.total?m.total.toFixed(0)+'円':'—'}</div></div>
@@ -872,7 +881,10 @@ function openRecipeDetail(id){
         <p style="font-size:17px;font-weight:600;">${r.name}</p>
         <p style="font-size:12px;color:var(--text2);margin-top:3px;">サブレシピ</p>
       </div>
-      <button class="btn btn-danger" type="button" onclick="delRecipe(${r.id})">削除</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" type="button" onclick="openEditRecipe(${r.id})">✏️ 編集</button>
+        <button class="btn btn-danger" type="button" onclick="delRecipe(${r.id})">削除</button>
+      </div>
     </div>
     <div class="metrics">
       <div class="met"><div class="met-label">原価合計</div><div class="met-value">${r.total?r.total.toFixed(0)+'円':'—'}</div></div>
@@ -1278,6 +1290,325 @@ function calcMenuNutrition(menuId){
 function closeModal(e){
   if(!e||e.target===document.getElementById('modal'))
     document.getElementById('modal').style.display='none';
+}
+
+// ========== メニュー 手動追加・編集 ==========
+
+// 編集中の構成要素リスト（一時データ）
+let editingComponents = [];
+
+function openAddMenu(){
+  editingComponents = [];
+  renderMenuEditModal(null);
+}
+
+function openEditMenu(id){
+  const m = menus.find(x=>x.id===id);
+  if(!m) return;
+  editingComponents = JSON.parse(JSON.stringify(Array.isArray(m.components)?m.components:[]));
+  renderMenuEditModal(m);
+}
+
+function renderMenuEditModal(m){
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      ${m?`<button class="btn btn-sm" type="button" onclick="openMenuDetail(${m.id})">← 戻る</button>`:''}
+      <p style="font-size:17px;font-weight:600;">${m?'メニューを編集':'メニューを新規作成'}</p>
+    </div>
+    <div class="form-row"><span class="form-label">メニュー名</span><input type="text" id="em-name" value="${m?m.name:''}" placeholder="例：ピスタチオタルト"/></div>
+    <div class="form-row">
+      <span class="form-label">売価</span>
+      <input type="number" id="em-price" value="${m&&m.price?m.price:''}" placeholder="例：4167" style="width:120px;flex:none;"/>
+      <span style="font-size:13px;color:var(--text2);">円（税抜）</span>
+    </div>
+    <hr class="divider"/>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <p style="font-size:13px;font-weight:600;">構成要素</p>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" type="button" onclick="addComponentRow('ingredient')">＋ 食材</button>
+        <button class="btn btn-sm" type="button" onclick="addComponentRow('recipe')">＋ レシピ</button>
+      </div>
+    </div>
+    <div id="em-components"></div>
+    <div id="em-total" style="text-align:right;font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" type="button" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" type="button" onclick="${m?`saveMenuEdit(${m.id})`:'saveMenuAdd()'}">保存・共有</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+  renderComponentRows();
+}
+
+function renderComponentRows(){
+  const el = document.getElementById('em-components');
+  if(!editingComponents.length){
+    el.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:12px;">まだ構成要素がありません</p>';
+    updateMenuTotal();
+    return;
+  }
+  el.innerHTML = editingComponents.map((c,i)=>{
+    const isRecipe = c.isRecipe;
+    const nameOptions = isRecipe
+      ? recipes.map(r=>`<option value="${r.name}"${r.name===c.name?' selected':''}>`)
+      : masterData.map(m=>`<option value="${m.name}"${m.name===c.name?' selected':''}>`)
+    return `
+    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:11px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
+        <button class="btn btn-danger" type="button" onclick="removeComponent(${i})" style="padding:2px 8px;font-size:11px;">削除</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <input type="text" list="em-list-${i}" value="${c.name}" onchange="updateComponentName(${i},this.value)"
+          placeholder="${isRecipe?'レシピ名':'食材名'}" style="flex:2;min-width:120px;font-size:13px;"/>
+        <datalist id="em-list-${i}">${nameOptions.join('')}</datalist>
+        <input type="number" value="${c.qty}" onchange="updateComponentQty(${i},this.value)"
+          placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
+        <select onchange="updateComponentUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
+          ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${c.unit===u?' selected':''}>${u}</option>`).join('')}
+        </select>
+        <span style="font-size:12px;color:var(--text2);min-width:50px;text-align:right;">${c.cost?'¥'+c.cost.toFixed(0):'—'}</span>
+      </div>
+    </div>`;
+  }).join('');
+  updateMenuTotal();
+}
+
+function addComponentRow(type){
+  editingComponents.push({name:'', qty:0, unit:'g', cost:0, isRecipe: type==='recipe'});
+  renderComponentRows();
+}
+
+function removeComponent(i){
+  editingComponents.splice(i,1);
+  renderComponentRows();
+}
+
+function updateComponentName(i, val){
+  editingComponents[i].name = val;
+  // 自動で原価を計算
+  recalcComponentCost(i);
+  updateMenuTotal();
+}
+
+function updateComponentQty(i, val){
+  editingComponents[i].qty = parseFloat(val)||0;
+  recalcComponentCost(i);
+  updateMenuTotal();
+}
+
+function updateComponentUnit(i, val){
+  editingComponents[i].unit = val;
+  recalcComponentCost(i);
+  updateMenuTotal();
+}
+
+function recalcComponentCost(i){
+  const c = editingComponents[i];
+  if(c.isRecipe){
+    const r = recipes.find(x=>x.name===c.name);
+    if(r && r.total_qty && r.total){
+      let useQty = c.qty;
+      if(r.total_unit==='kg'&&c.unit==='g') useQty=c.qty/1000;
+      else if(r.total_unit==='g'&&c.unit==='kg') useQty=c.qty*1000;
+      else if(r.total_unit==='l'&&c.unit==='ml') useQty=c.qty/1000;
+      else if(r.total_unit==='ml'&&c.unit==='l') useQty=c.qty*1000;
+      c.cost = (r.total/r.total_qty)*useQty;
+    } else {
+      c.cost = 0;
+    }
+  } else {
+    const up = getMasterUnitPrice(c.name, c.unit);
+    c.cost = up!=null ? c.qty*up : 0;
+  }
+  // DOM上の原価表示を更新
+  const rows = document.querySelectorAll('#em-components > div');
+  if(rows[i]){
+    const costEl = rows[i].querySelector('span[style*="min-width:50px"]');
+    if(costEl) costEl.textContent = c.cost?'¥'+c.cost.toFixed(0):'—';
+  }
+}
+
+function updateMenuTotal(){
+  const total = editingComponents.reduce((s,c)=>s+(c.cost||0),0);
+  const el = document.getElementById('em-total');
+  if(el) el.innerHTML = `原価合計：<strong>¥${total.toFixed(0)}</strong>`;
+}
+
+async function saveMenuAdd(){
+  const name = document.getElementById('em-name').value.trim();
+  const price = parseFloat(document.getElementById('em-price').value)||0;
+  if(!name){alert('メニュー名を入力してください');return;}
+  const components = editingComponents.filter(c=>c.name);
+  const total = components.reduce((s,c)=>s+(c.cost||0),0);
+  const rate = price&&total ? total/price*100 : null;
+  setSyncing();
+  const res = await sb.from('menus').insert({name,components,total,price,rate});
+  if(res.error){setError('保存失敗');console.error(res.error);return;}
+  await loadAll();
+  closeModal();
+  alert(`「${name}」を追加しました！`);
+}
+
+async function saveMenuEdit(id){
+  const name = document.getElementById('em-name').value.trim();
+  const price = parseFloat(document.getElementById('em-price').value)||0;
+  if(!name){alert('メニュー名を入力してください');return;}
+  const components = editingComponents.filter(c=>c.name);
+  const total = components.reduce((s,c)=>s+(c.cost||0),0);
+  const rate = price&&total ? total/price*100 : null;
+  setSyncing();
+  const res = await sb.from('menus').update({name,components,total,price,rate}).eq('id',id);
+  if(res.error){setError('保存失敗');console.error(res.error);return;}
+  await loadAll();
+  closeModal();
+  alert(`「${name}」を保存しました！`);
+}
+
+// ========== レシピ 手動追加・編集 ==========
+
+let editingIngredients = [];
+
+function openAddRecipe(){
+  editingIngredients = [];
+  renderRecipeEditModal(null);
+}
+
+function openEditRecipe(id){
+  const r = recipes.find(x=>x.id===id);
+  if(!r) return;
+  editingIngredients = JSON.parse(JSON.stringify(Array.isArray(r.ingredients)?r.ingredients:[]));
+  renderRecipeEditModal(r);
+}
+
+function renderRecipeEditModal(r){
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      ${r?`<button class="btn btn-sm" type="button" onclick="openRecipeDetail(${r.id})">← 戻る</button>`:''}
+      <p style="font-size:17px;font-weight:600;">${r?'レシピを編集':'レシピを新規作成'}</p>
+    </div>
+    <div class="form-row"><span class="form-label">レシピ名</span><input type="text" id="er-name" value="${r?r.name:''}" placeholder="例：ピスタチオクリーム"/></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <span class="form-label">総量</span>
+      <input type="number" id="er-total-qty" value="${r&&r.total_qty?r.total_qty:''}" placeholder="例：1120" style="width:100px;flex:none;font-size:14px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);"/>
+      <select id="er-total-unit" style="width:75px;font-size:14px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);">
+        ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${(r&&r.total_unit||'g')===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <span style="font-size:11px;color:var(--text2);">できあがり量</span>
+    </div>
+    <hr class="divider"/>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <p style="font-size:13px;font-weight:600;">材料</p>
+      <button class="btn btn-sm" type="button" onclick="addIngredientRow()">＋ 材料を追加</button>
+    </div>
+    <div id="er-ingredients"></div>
+    <div id="er-total" style="text-align:right;font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" type="button" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" type="button" onclick="${r?`saveRecipeEdit(${r.id})`:'saveRecipeAdd()'}">保存・共有</button>
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+  renderIngredientRows();
+}
+
+function renderIngredientRows(){
+  const el = document.getElementById('er-ingredients');
+  if(!editingIngredients.length){
+    el.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:12px;">まだ材料がありません</p>';
+    updateRecipeTotal();
+    return;
+  }
+  el.innerHTML = editingIngredients.map((ing,i)=>`
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+      <input type="text" list="er-list-${i}" value="${ing.name}" onchange="updateIngName(${i},this.value)"
+        placeholder="食材名" style="flex:2;min-width:100px;font-size:13px;"/>
+      <datalist id="er-list-${i}">${masterData.map(m=>`<option value="${m.name}">`).join('')}</datalist>
+      <input type="number" value="${ing.qty}" onchange="updateIngQty(${i},this.value)"
+        placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
+      <select onchange="updateIngUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
+        ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${ing.unit===u?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:var(--text2);min-width:46px;text-align:right;">${ing.cost?'¥'+ing.cost.toFixed(0):'—'}</span>
+      <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;flex:none;">✕</button>
+    </div>`).join('');
+  updateRecipeTotal();
+}
+
+function addIngredientRow(){
+  editingIngredients.push({name:'',qty:0,unit:'g',cost:0,price:0});
+  renderIngredientRows();
+}
+
+function removeIngredient(i){
+  editingIngredients.splice(i,1);
+  renderIngredientRows();
+}
+
+function updateIngName(i,val){
+  editingIngredients[i].name=val;
+  recalcIngCost(i);
+  updateRecipeTotal();
+}
+
+function updateIngQty(i,val){
+  editingIngredients[i].qty=parseFloat(val)||0;
+  recalcIngCost(i);
+  updateRecipeTotal();
+}
+
+function updateIngUnit(i,val){
+  editingIngredients[i].unit=val;
+  recalcIngCost(i);
+  updateRecipeTotal();
+}
+
+function recalcIngCost(i){
+  const ing = editingIngredients[i];
+  const up = getMasterUnitPrice(ing.name, ing.unit);
+  ing.cost = up!=null ? ing.qty*up : 0;
+  ing.price = up||0;
+  const rows = document.querySelectorAll('#er-ingredients > div');
+  if(rows[i]){
+    const costEl = rows[i].querySelector('span[style*="min-width:46px"]');
+    if(costEl) costEl.textContent = ing.cost?'¥'+ing.cost.toFixed(0):'—';
+  }
+}
+
+function updateRecipeTotal(){
+  const total = editingIngredients.reduce((s,i)=>s+(i.cost||0),0);
+  const el = document.getElementById('er-total');
+  if(el) el.innerHTML = `原価合計：<strong>¥${total.toFixed(0)}</strong>`;
+}
+
+async function saveRecipeAdd(){
+  const name = document.getElementById('er-name').value.trim();
+  const total_qty = parseFloat(document.getElementById('er-total-qty').value)||0;
+  const total_unit = document.getElementById('er-total-unit').value;
+  if(!name){alert('レシピ名を入力してください');return;}
+  const ingredients = editingIngredients.filter(i=>i.name);
+  const total = ingredients.reduce((s,i)=>s+(i.cost||0),0);
+  const unit = total_qty ? total/total_qty : 0;
+  setSyncing();
+  const res = await sb.from('recipes').insert({name,ingredients,total,unit,total_qty,total_unit,cat:'その他',yield:1,price:0,rate:null});
+  if(res.error){setError('保存失敗');console.error(res.error);return;}
+  await loadAll();
+  closeModal();
+  alert(`「${name}」を追加しました！`);
+}
+
+async function saveRecipeEdit(id){
+  const name = document.getElementById('er-name').value.trim();
+  const total_qty = parseFloat(document.getElementById('er-total-qty').value)||0;
+  const total_unit = document.getElementById('er-total-unit').value;
+  if(!name){alert('レシピ名を入力してください');return;}
+  const ingredients = editingIngredients.filter(i=>i.name);
+  const total = ingredients.reduce((s,i)=>s+(i.cost||0),0);
+  const unit = total_qty ? total/total_qty : 0;
+  setSyncing();
+  const res = await sb.from('recipes').update({name,ingredients,total,unit,total_qty,total_unit}).eq('id',id);
+  if(res.error){setError('保存失敗');console.error(res.error);return;}
+  await loadAll();
+  closeModal();
+  alert(`「${name}」を保存しました！`);
 }
 
 // ---- CSV取込モード切替 ----
