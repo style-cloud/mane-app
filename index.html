@@ -1057,15 +1057,17 @@ function openEditMaster(id){
       ${affectedMenus.length ? `
         <p style="font-size:12px;color:var(--text2);margin-bottom:6px;">影響するメニュー（${affectedMenus.length}件）</p>
         ${affectedMenus.map(({menu,costImpact})=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);">
-            <span style="font-size:13px;">・${menu.name}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);cursor:pointer;" onclick="closeModal();setTimeout(()=>openMenuDetail(${menu.id}),100);">
+            <span style="font-size:13px;color:var(--blue);text-decoration:underline;">・${menu.name}</span>
             <span style="font-size:12px;color:var(--text2);">原価への影響 ¥${costImpact.toFixed(0)}</span>
           </div>`).join('')}
       ` : ''}
       ${affectedRecipes.length ? `
         <p style="font-size:12px;color:var(--text2);margin:8px 0 6px;">含まれるレシピ（${affectedRecipes.length}件）</p>
         ${affectedRecipes.map(r=>`
-          <div style="padding:3px 0;font-size:13px;">・${r.name}</div>`).join('')}
+          <div style="padding:3px 0;font-size:13px;cursor:pointer;" onclick="closeModal();setTimeout(()=>openRecipeDetail(${r.id}),100);">
+            <span style="color:var(--blue);text-decoration:underline;">・${r.name}</span>
+          </div>`).join('')}
       ` : ''}
       <div style="margin-top:10px;padding:8px;background:#fff;border-radius:var(--radius-sm);border:0.5px solid var(--border);">
         <p style="font-size:11px;color:var(--text2);margin-bottom:4px;">💡 値上がりシミュレーション</p>
