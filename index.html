@@ -259,6 +259,9 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
         </select>
       </div>
       <div id="lb-form" style="display:none;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <button class="btn btn-sm" type="button" onclick="cancelLabelSelect()" style="font-size:12px;">✕ キャンセル</button>
+        </div>
         <div class="form-row"><span class="form-label">名称</span><input type="text" id="lb-category" placeholder="焼菓子"/></div>
         <div class="form-row" style="align-items:flex-start;">
           <span class="form-label" style="margin-top:8px;">原材料名</span>
@@ -566,13 +569,13 @@ function previewLabel(){
     </div>
     <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：39mm × 48mm</p>
 
-    <!-- ラベルプレビュー（画面上は拡大表示） -->
     <div style="display:flex;justify-content:center;margin-bottom:14px;">
-      <div id="label-preview-box" style="width:222px;border:1px solid #333;padding:6px;font-size:8px;line-height:1.5;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;">
-        <table style="width:100%;border-collapse:collapse;font-size:8px;">
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;white-space:nowrap;width:40%;">商品名</td><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;">${m.name}</td></tr>
+      <div id="label-preview-box" style="width:222px;height:273px;border:1px solid #333;padding:6px;font-size:8px;line-height:1.5;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;box-sizing:border-box;display:flex;flex-direction:column;">
+        <table style="width:100%;border-collapse:collapse;font-size:8px;flex:1;height:100%;">
+          <colgroup><col style="width:40%;"><col style="width:60%;"></colgroup>
+          <tr><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;white-space:nowrap;">商品名</td><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;">${m.name}</td></tr>
           <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">名称</td><td style="border:0.5px solid #333;padding:2px 4px;">${category}</td></tr>
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:2px 4px;">${ingredients.replace(/\n/g,'<br>')}</td></tr>
+          <tr style="height:100%;"><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:2px 4px;vertical-align:top;">${ingredients.replace(/\n/g,'<br>')}</td></tr>
           <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">内容量</td><td style="border:0.5px solid #333;padding:2px 4px;">${content}</td></tr>
           ${expiry?`<tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">賞味期限</td><td style="border:0.5px solid #333;padding:2px 4px;">${expiryStr}</td></tr>`:''}
           <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">保存方法</td><td style="border:0.5px solid #333;padding:2px 4px;">${storage}</td></tr>
@@ -610,14 +613,23 @@ function printLabel(){
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
     <style>
       @page { size: 39mm 48mm; margin: 0; }
-      body { margin: 0; padding: 1mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; }
-      table { width: 100%; border-collapse: collapse; font-size: 5.5pt; line-height: 1.4; }
-      td { border: 0.3pt solid #333; padding: 1pt 2pt; vertical-align: top; }
+      body { margin: 0; padding: 1mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; height: 48mm; box-sizing: border-box; }
+      .label-wrap { width: 100%; height: 100%; display: flex; flex-direction: column; }
+      table.main { width: 100%; border-collapse: collapse; font-size: 5.5pt; line-height: 1.4; flex: 1; height: 100%; }
+      table.main td { border: 0.3pt solid #333; padding: 1pt 2pt; vertical-align: top; }
+      tr.ingredient-row { height: 100%; }
+      tr.ingredient-row td { vertical-align: top; }
+      table.nutrition { width: 100%; border-collapse: collapse; font-size: 5pt; }
     </style>
-    </head><body>${labelBox.innerHTML}</body></html>`);
+    </head><body><div style="width:100%;height:100%;display:flex;flex-direction:column;">${labelBox.innerHTML}</div></body></html>`);
   win.document.close();
   win.focus();
   setTimeout(()=>{ win.print(); }, 500);
+}
+
+function cancelLabelSelect(){
+  document.getElementById('lb-menu-select').value = '';
+  document.getElementById('lb-form').style.display = 'none';
 }
 
 function closeLabelModal(e){
