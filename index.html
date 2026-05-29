@@ -1008,21 +1008,134 @@ function openAddMaster(){
 function openEditMaster(id){
   const m=masterData.find(x=>x.id===id);
   if(!m) return;
+
+  // この食材を使っているレシピを検索
+  const affectedRecipes = recipes.filter(r=>
+    Array.isArray(r.ingredients) && r.ingredients.some(i=>i.name===m.name)
+  );
+
+  // この食材・影響レシピを使っているメニューを検索
+  const affectedMenus = menus.map(menu=>{
+    const comps = Array.isArray(menu.components)?menu.components:[];
+    let usedQty = 0; // g換算
+    let costImpact = 0;
+
+    comps.forEach(c=>{
+      if(!c.isRecipe && c.name===m.name){
+        // メニューが直接この食材を使用
+        let qty = c.qty;
+        if(c.unit==='kg') qty*=1000;
+        usedQty += qty;
+        const up = m.qty ? m.price/m.qty : 0;
+        costImpact += up * c.qty;
+      }
+      if(c.isRecipe){
+        // レシピ経由で使用しているか
+        const r = recipes.find(x=>x.name===c.name);
+        if(!r) return;
+        const ing = Array.isArray(r.ingredients) && r.ingredients.find(i=>i.name===m.name);
+        if(!ing) return;
+        const rqty = r.total_qty||1;
+        let factor = c.qty/rqty;
+        if(r.total_unit==='kg'&&c.unit==='g') factor=c.qty/1000/rqty;
+        else if(r.total_unit==='g'&&c.unit==='kg') factor=c.qty*1000/rqty;
+        let ingQty = ing.qty;
+        if(ing.unit==='kg') ingQty*=1000;
+        usedQty += ingQty * factor;
+        const up = m.qty ? m.price/m.qty : 0;
+        costImpact += up * ing.qty * factor;
+      }
+    });
+
+    return costImpact > 0 ? {menu, costImpact} : null;
+  }).filter(Boolean);
+
+  // 影響セクションのHTML
+  const impactHTML = (affectedMenus.length || affectedRecipes.length) ? `
+    <div style="margin:14px 0 0;padding:12px;background:var(--bg2);border-radius:var(--radius-sm);">
+      <p style="font-size:13px;font-weight:600;margin-bottom:8px;">📊 この食材の使用状況</p>
+      ${affectedMenus.length ? `
+        <p style="font-size:12px;color:var(--text2);margin-bottom:6px;">影響するメニュー（${affectedMenus.length}件）</p>
+        ${affectedMenus.map(({menu,costImpact})=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);">
+            <span style="font-size:13px;">・${menu.name}</span>
+            <span style="font-size:12px;color:var(--text2);">原価への影響 ¥${costImpact.toFixed(0)}</span>
+          </div>`).join('')}
+      ` : ''}
+      ${affectedRecipes.length ? `
+        <p style="font-size:12px;color:var(--text2);margin:8px 0 6px;">含まれるレシピ（${affectedRecipes.length}件）</p>
+        ${affectedRecipes.map(r=>`
+          <div style="padding:3px 0;font-size:13px;">・${r.name}</div>`).join('')}
+      ` : ''}
+      <div style="margin-top:10px;padding:8px;background:#fff;border-radius:var(--radius-sm);border:0.5px solid var(--border);">
+        <p style="font-size:11px;color:var(--text2);margin-bottom:4px;">💡 値上がりシミュレーション</p>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:12px;">仮の単価：</span>
+          <input type="number" id="sim-price" placeholder="新しい価格（円）" style="width:130px;font-size:13px;padding:4px 8px;flex:none;"
+            oninput="runPriceSimulation(${id})"/>
+          <span style="font-size:12px;color:var(--text2);">円 / ${m.qty}${m.unit}</span>
+        </div>
+        <div id="sim-result" style="margin-top:6px;font-size:12px;color:var(--text2);"></div>
+      </div>
+    </div>` : `
+    <div style="margin:14px 0 0;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
+      <p style="font-size:12px;color:var(--text3);">📊 この食材はまだどのメニュー・レシピにも使用されていません</p>
+    </div>`;
+
   document.getElementById('modal-body').innerHTML=`
     <div style="margin-bottom:14px;">
       <p style="font-size:17px;font-weight:600;">食材を編集</p>
     </div>
     ${masterFormHTML(m)}
+    ${impactHTML}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
       <button class="btn" type="button" onclick="closeModal()">キャンセル</button>
       <button class="btn btn-primary" type="button" onclick="saveMasterEdit(${id})">保存・共有</button>
     </div>`;
   document.getElementById('modal').style.display='flex';
-  // グループリストを設定
   fillGroupDatalist();
-  // 既存グループを設定
   const existing = ingredientGroups.find(g=>g.ingredient_name===m.name);
   if(existing) document.getElementById('mf-group').value = existing.group_name;
+}
+
+function runPriceSimulation(masterId){
+  const m = masterData.find(x=>x.id===masterId);
+  if(!m) return;
+  const newPrice = parseFloat(document.getElementById('sim-price').value);
+  if(!newPrice || !m.qty) return;
+  const newUnitPrice = newPrice / m.qty;
+  const currentUnitPrice = m.price / m.qty;
+  const diff = newUnitPrice - currentUnitPrice;
+
+  const results = menus.map(menu=>{
+    const comps = Array.isArray(menu.components)?menu.components:[];
+    let totalDiff = 0;
+    comps.forEach(c=>{
+      if(!c.isRecipe && c.name===m.name){
+        let qty=c.qty; if(c.unit==='kg') qty*=1000;
+        totalDiff += diff * qty;
+      }
+      if(c.isRecipe){
+        const r=recipes.find(x=>x.name===c.name);
+        if(!r) return;
+        const ing=Array.isArray(r.ingredients)&&r.ingredients.find(i=>i.name===m.name);
+        if(!ing) return;
+        const rqty=r.total_qty||1;
+        let factor=c.qty/rqty;
+        totalDiff += diff * ing.qty * factor;
+      }
+    });
+    return totalDiff!==0 ? {name:menu.name, diff:totalDiff} : null;
+  }).filter(Boolean);
+
+  const el = document.getElementById('sim-result');
+  if(!results.length){ el.textContent='影響するメニューはありません'; return; }
+  el.innerHTML = results.map(r=>
+    `<div style="display:flex;justify-content:space-between;padding:2px 0;">
+      <span>・${r.name}</span>
+      <span style="color:${r.diff>0?'#e53e3e':'#38a169'};">${r.diff>0?'+':''}¥${r.diff.toFixed(0)}</span>
+    </div>`
+  ).join('');
 }
 
 function masterFormHTML(m={}){
