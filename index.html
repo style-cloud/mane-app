@@ -293,6 +293,10 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
 
 </div>
 
+<!-- トップへ戻るボタン -->
+<button id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  style="display:none;position:fixed;bottom:24px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--brown);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);z-index:999;align-items:center;justify-content:center;">↑</button>
+
 <!-- ラベルプレビューモーダル -->
 <div class="modal-overlay" id="label-modal" style="display:none;" onclick="closeLabelModal(event)">
   <div class="modal-sheet" style="max-height:95vh;">
@@ -322,6 +326,13 @@ function setError(msg){ document.getElementById('sdot').className='sync-dot erro
 
 
 // ---- ラベル印刷機能 ----
+// ---- トップへ戻るボタン ----
+window.addEventListener('scroll', ()=>{
+  const btn = document.getElementById('scroll-top-btn');
+  if(!btn) return;
+  btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+});
+
 let labelSettings = {manufacturer:'', address:''};
 let labelInfoCache = {};
 
@@ -956,15 +967,14 @@ function renderMasterTable(){
   const f=masterData.filter(m=>m.name.toLowerCase().includes(q)||(m.vendor||'').toLowerCase().includes(q));
   if(!f.length){el.innerHTML='<div class="empty">食材マスターがありません</div>';return;}
   el.innerHTML=f.map(m=>`
-    <div class="list-item" style="flex-direction:column;align-items:stretch;gap:6px;cursor:default;">
+    <div class="list-item" style="flex-direction:column;align-items:stretch;gap:6px;cursor:pointer;" onclick="openEditMaster(${m.id})">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <span style="font-size:14px;font-weight:500;">${m.name}</span>
           <span style="font-size:11px;color:var(--text2);margin-left:8px;">${m.vendor||''}</span>
         </div>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-sm" type="button" onclick="openEditMaster(${m.id})" style="font-size:12px;padding:4px 10px;">編集</button>
-          <button class="btn btn-danger" type="button" onclick="deleteMaster(${m.id})" style="font-size:12px;padding:4px 10px;">削除</button>
+          <button class="btn btn-danger" type="button" onclick="event.stopPropagation();deleteMaster(${m.id})" style="font-size:12px;padding:4px 10px;">削除</button>
         </div>
       </div>
       <div style="font-size:12px;color:var(--text2);">
