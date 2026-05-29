@@ -819,11 +819,16 @@ function openMenuDetail(id){
     <table class="det-table">
       <tr><th>名前</th><th>量</th><th>単位</th><th>原価</th><th>種別</th></tr>
       ${comps.map(c=>`<tr>
-        <td style="font-weight:500;">${c.name}</td>
+        <td style="font-weight:500;">
+          ${c.isRecipe
+            ? `<span style="color:var(--blue);text-decoration:underline;cursor:pointer;" onclick="openRecipeDetail(${(recipes.find(x=>x.name===c.name)||{}).id})">${c.name}</span>`
+            : `<span style="color:var(--blue);text-decoration:underline;cursor:pointer;" onclick="openEditMaster(${(masterData.find(x=>x.name===c.name)||{}).id})">${c.name}</span>`
+          }
+        </td>
         <td>${c.qty}</td>
         <td>${c.unit}</td>
         <td>${c.cost?c.cost.toFixed(0)+'円':'—'}</td>
-        <td>${c.isRecipe?`<span class="sub-badge" onclick="jumpToRecipe('${c.name.replace(/'/g,String.fromCharCode(39))}')" style="cursor:pointer;text-decoration:underline;" title="タップでレシピを開く">レシピ →</span>`:'<span>材料</span>'}</td>
+        <td>${c.isRecipe?'レシピ':'食材'}</td>
       </tr>`).join('')}
     </table>
     <hr class="divider"/>
@@ -919,10 +924,24 @@ function openRecipeDetail(id){
     <table class="det-table">
       <tr><th>材料名</th><th>使用量</th><th>単位</th><th>原価</th></tr>
       ${ings.map(i=>`<tr>
-        <td>${i.name}</td><td>${i.qty}</td><td>${i.unit}</td>
+        <td>
+          <span style="color:var(--blue);text-decoration:underline;cursor:pointer;"
+            onclick="openEditMaster(${(masterData.find(x=>x.name===i.name)||{}).id})">${i.name}</span>
+        </td>
+        <td>${i.qty}</td><td>${i.unit}</td>
         <td>${i.cost?i.cost.toFixed(0)+'円':(i.qty&&i.price?(i.qty*i.price).toFixed(0)+'円':'—')}</td>
       </tr>`).join('')}
     </table>
+    ${(()=>{
+      const usingMenus = menus.filter(m=>Array.isArray(m.components)&&m.components.some(c=>c.isRecipe&&c.name===r.name));
+      return usingMenus.length ? `
+        <hr class="divider"/>
+        <p style="font-size:13px;font-weight:600;margin-bottom:8px;">このレシピを使用しているメニュー（${usingMenus.length}件）</p>
+        ${usingMenus.map(m=>`
+          <div style="padding:5px 0;border-bottom:0.5px solid var(--border);cursor:pointer;" onclick="openMenuDetail(${m.id})">
+            <span style="color:var(--blue);text-decoration:underline;font-size:13px;">・${m.name}</span>
+          </div>`).join('')}` : '';
+    })()}
     <hr class="divider"/>
     <p style="font-size:13px;font-weight:600;margin-bottom:10px;">総量を設定（正しい単価計算に必要）</p>
     <p style="font-size:12px;color:var(--text2);margin-bottom:8px;">例：シャンティのレシピが全材料で1,120g作れる場合 → 総量: 1120g</p>
