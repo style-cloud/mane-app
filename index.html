@@ -245,6 +245,12 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
       <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">全商品共通の製造者情報を設定してください。</p>
       <div class="form-row"><span class="form-label">製造者名</span><input type="text" id="lb-manufacturer" placeholder="patisserie MAne 金野周太郎"/></div>
       <div class="form-row"><span class="form-label">住所</span><input type="text" id="lb-address" placeholder="東京都板橋区高島平8-15-1"/></div>
+      <div style="margin:10px 0;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="lb-show-recommended-allergens" style="width:16px;height:16px;flex:none;"/>
+          <span>推奨アレルゲン（20品目）もラベルに表示する<br><span style="font-size:11px;color:var(--text2);">義務表示8品目は常に表示されます</span></span>
+        </label>
+      </div>
       <div style="text-align:right;">
         <button class="btn btn-primary btn-sm" type="button" onclick="saveLabelSettings()">設定を保存</button>
       </div>
@@ -573,6 +579,37 @@ function previewLabel(){
 
   const hasNutrition = total.kcal>0||total.protein>0||total.fat>0;
 
+  // アレルゲンを自動集計
+  const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ'];
+  const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','まつたけ','もも','やまいも','りんご','ゼラチン','カシューナッツ','ごま','アーモンド'];
+  const showRecommended = document.getElementById('lb-show-recommended-allergens')?.checked;
+  const collectedAllergens = new Set();
+
+  const collectFromIngredient = (name) => {
+    const master = masterData.find(x=>x.name===name);
+    if(master && Array.isArray(master.allergens)){
+      master.allergens.forEach(a=>{
+        if(ALLERGENS_REQUIRED.includes(a)) collectedAllergens.add(a);
+        if(showRecommended && ALLERGENS_RECOMMENDED.includes(a)) collectedAllergens.add(a);
+      });
+    }
+  };
+
+  comps.forEach(c=>{
+    if(c.isRecipe){
+      const r=recipes.find(x=>x.name===c.name);
+      if(r) (Array.isArray(r.ingredients)?r.ingredients:[]).forEach(i=>collectFromIngredient(i.name));
+    } else {
+      collectFromIngredient(c.name);
+    }
+  });
+
+  const allergenOrder = [...ALLERGENS_REQUIRED, ...ALLERGENS_RECOMMENDED];
+  const sortedAllergens = allergenOrder.filter(a=>collectedAllergens.has(a));
+  const allergenText = sortedAllergens.length > 0
+    ? `（一部に${sortedAllergens.join('・')}を含む）`
+    : '';
+
   document.getElementById('label-modal-body').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <p style="font-size:16px;font-weight:600;">ラベルプレビュー</p>
@@ -586,7 +623,7 @@ function previewLabel(){
           <colgroup><col style="width:32%;"><col style="width:68%;"></colgroup>
           <tr><td style="border:0.5px solid #333;padding:1px 2px;font-weight:600;white-space:nowrap;">商品名</td><td style="border:0.5px solid #333;padding:1px 2px;font-weight:600;word-break:break-all;">${m.name}</td></tr>
           <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;">名称</td><td style="border:0.5px solid #333;padding:1px 2px;">${category}</td></tr>
-          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:1px 2px;vertical-align:top;word-break:break-all;">${ingredients.replace(/\n/g,'<br>')}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:1px 2px;vertical-align:top;word-break:break-all;">${ingredients.replace(/\n/g,'<br>')}${allergenText?`<br><span style="font-size:5px;">${allergenText}</span>`:''}</td></tr>
           <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;">内容量</td><td style="border:0.5px solid #333;padding:1px 2px;">${content}</td></tr>
           ${expiry?`<tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;">賞味期限</td><td style="border:0.5px solid #333;padding:1px 2px;">${expiryStr}</td></tr>`:''}
           <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;vertical-align:top;">保存方法</td><td style="border:0.5px solid #333;padding:1px 2px;word-break:break-all;">${storage}</td></tr>
@@ -1159,6 +1196,10 @@ function runPriceSimulation(masterId){
 }
 
 function masterFormHTML(m={}){
+  const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ'];
+  const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','まつたけ','もも','やまいも','りんご','ゼラチン','カシューナッツ','ごま','アーモンド'];
+  const allergens = m.allergens || [];
+
   return `
     <div style="margin-bottom:10px;">
       <button class="btn btn-sm" type="button" onclick="openPresetSearch()" style="width:100%;justify-content:center;">🔍 食品成分表からプリセットを選ぶ（栄養成分を自動入力）</button>
@@ -1183,6 +1224,27 @@ function masterFormHTML(m={}){
       <datalist id="mf-group-list"></datalist>
     </div>
     <p style="font-size:11px;color:var(--text2);margin:-6px 0 10px 86px;">ラベル印刷時に同じグループ名でまとめて表示されます</p>
+
+    <div style="margin:10px 0 6px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
+      <p style="font-size:12px;font-weight:600;margin-bottom:8px;">⚠️ アレルゲン</p>
+      <p style="font-size:11px;color:var(--text2);margin-bottom:6px;">義務表示（8品目）</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+        ${ALLERGENS_REQUIRED.map(a=>`
+          <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;background:#fff;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);">
+            <input type="checkbox" name="mf-allergen" value="${a}" ${allergens.includes(a)?'checked':''} style="width:14px;height:14px;flex:none;"/>
+            ${a}
+          </label>`).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--text2);margin-bottom:6px;">推奨表示（20品目）</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${ALLERGENS_RECOMMENDED.map(a=>`
+          <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;background:#fff;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);">
+            <input type="checkbox" name="mf-allergen" value="${a}" ${allergens.includes(a)?'checked':''} style="width:14px;height:14px;flex:none;"/>
+            ${a}
+          </label>`).join('')}
+      </div>
+    </div>
+
     <div style="margin:10px 0 6px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
         <input type="checkbox" id="mf-packaging" ${m.is_packaging?'checked':''} style="width:16px;height:16px;flex:none;"/>
@@ -1254,10 +1316,11 @@ function getMasterFormData(){
   const fat=parseFloat(document.getElementById('mf-fat').value)||null;
   const carbs=parseFloat(document.getElementById('mf-carbs').value)||null;
   const salt=parseFloat(document.getElementById('mf-salt').value)||null;
+  const allergens = Array.from(document.querySelectorAll('input[name="mf-allergen"]:checked')).map(el=>el.value);
   if(!name){alert('食材名を入力してください');return null;}
   if(!qty){alert('購入量を入力してください');return null;}
   if(!price){alert('購入価格を入力してください');return null;}
-  return{name,vendor,qty,unit,price,is_packaging,kcal,protein,fat,carbs,salt};
+  return{name,vendor,qty,unit,price,is_packaging,kcal,protein,fat,carbs,salt,allergens};
 }
 
 async function deleteMaster(id){
