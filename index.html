@@ -578,42 +578,42 @@ function previewLabel(){
       <p style="font-size:16px;font-weight:600;">ラベルプレビュー</p>
       <button class="btn btn-primary btn-sm" type="button" onclick="printLabel()">🖨 印刷</button>
     </div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：48mm × 39mm（横向き）</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：39mm × 48mm</p>
 
     <div style="display:flex;justify-content:center;margin-bottom:14px;">
-      <div id="label-preview-box" style="width:273px;height:222px;border:1px solid #333;padding:6px;font-size:8px;line-height:1.5;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;box-sizing:border-box;display:flex;flex-direction:column;">
-        <table style="width:100%;border-collapse:collapse;font-size:8px;flex:1;height:100%;">
-          <colgroup><col style="width:40%;"><col style="width:60%;"></colgroup>
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;white-space:nowrap;">商品名</td><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;">${m.name}</td></tr>
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">名称</td><td style="border:0.5px solid #333;padding:2px 4px;">${category}</td></tr>
-          <tr style="height:100%;"><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:2px 4px;vertical-align:top;">${ingredients.replace(/\n/g,'<br>')}</td></tr>
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">内容量</td><td style="border:0.5px solid #333;padding:2px 4px;">${content}</td></tr>
-          ${expiry?`<tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;">賞味期限</td><td style="border:0.5px solid #333;padding:2px 4px;">${expiryStr}</td></tr>`:''}
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">保存方法</td><td style="border:0.5px solid #333;padding:2px 4px;">${storage}</td></tr>
-          <tr><td style="border:0.5px solid #333;padding:2px 4px;white-space:nowrap;vertical-align:top;">製造者</td><td style="border:0.5px solid #333;padding:2px 4px;">${manufacturer}<br>${address}</td></tr>
-          ${hasNutrition?`<tr><td colspan="2" style="border:0.5px solid #333;padding:2px 4px;">
-            <div style="font-size:7px;">栄養成分表示（${content||'1個'}当たり）この表示値は、目安です。</div>
-            <table style="width:100%;border-collapse:collapse;font-size:7px;margin-top:2px;">
+      <div id="label-preview-box" style="width:195px;height:240px;border:1px solid #333;padding:3px;font-size:6px;line-height:1.3;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;box-sizing:border-box;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;font-size:6px;table-layout:fixed;">
+          <colgroup><col style="width:32%;"><col style="width:68%;"></colgroup>
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;font-weight:600;white-space:nowrap;">商品名</td><td style="border:0.5px solid #333;padding:1px 2px;font-weight:600;word-break:break-all;">${m.name}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;">名称</td><td style="border:0.5px solid #333;padding:1px 2px;">${category}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;vertical-align:top;">原材料名</td><td style="border:0.5px solid #333;padding:1px 2px;vertical-align:top;word-break:break-all;">${ingredients.replace(/\n/g,'<br>')}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;">内容量</td><td style="border:0.5px solid #333;padding:1px 2px;">${content}</td></tr>
+          ${expiry?`<tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;">賞味期限</td><td style="border:0.5px solid #333;padding:1px 2px;">${expiryStr}</td></tr>`:''}
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;vertical-align:top;">保存方法</td><td style="border:0.5px solid #333;padding:1px 2px;word-break:break-all;">${storage}</td></tr>
+          <tr><td style="border:0.5px solid #333;padding:1px 2px;white-space:nowrap;vertical-align:top;">製造者</td><td style="border:0.5px solid #333;padding:1px 2px;word-break:break-all;">${manufacturer}${address?'<br>'+address:''}</td></tr>
+          ${hasNutrition?`<tr><td colspan="2" style="border:0.5px solid #333;padding:1px 2px;">
+            <div style="font-size:5px;margin-bottom:1px;">栄養成分表示（${content||'1個'}当たり）この表示値は、目安です。</div>
+            <table style="width:100%;border-collapse:collapse;font-size:5px;">
               <tr>
-                <td style="border:0.5px solid #333;padding:1px 3px;">エネルギー</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">たんぱく質</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">脂質</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">炭水化物</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">食塩相当量</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">エネルギー</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">たんぱく質</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">脂質</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">炭水化物</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">食塩相当量</td>
               </tr>
               <tr>
-                <td style="border:0.5px solid #333;padding:1px 3px;">${total.kcal.toFixed(1)}kcal</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">${total.protein.toFixed(1)}g</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">${total.fat.toFixed(1)}g</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">${total.carbs.toFixed(1)}g</td>
-                <td style="border:0.5px solid #333;padding:1px 3px;">${total.salt.toFixed(2)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">${total.kcal.toFixed(1)}kcal</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">${total.protein.toFixed(1)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">${total.fat.toFixed(1)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">${total.carbs.toFixed(1)}g</td>
+                <td style="border:0.5px solid #333;padding:1px 2px;text-align:center;">${total.salt.toFixed(2)}g</td>
               </tr>
             </table>
           </td></tr>`:''}
         </table>
       </div>
     </div>
-    <p style="font-size:12px;color:var(--text2);text-align:center;">「印刷」ボタンを押すとブラウザの印刷ダイアログが開きます。<br>用紙サイズを39×48mm・横向きに設定してください。</p>
+    <p style="font-size:12px;color:var(--text2);text-align:center;">「印刷」ボタンを押すとブラウザの印刷ダイアログが開きます。<br>用紙サイズを39×48mmに設定してください。</p>
   `;
   document.getElementById('label-modal').style.display='flex';
 }
@@ -623,15 +623,13 @@ function printLabel(){
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
     <style>
-      @page { size: 48mm 39mm landscape; margin: 0; }
-      body { margin: 0; padding: 1mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; width: 48mm; height: 39mm; box-sizing: border-box; }
-      .label-wrap { width: 100%; height: 100%; display: flex; flex-direction: column; }
-      table.main { width: 100%; border-collapse: collapse; font-size: 5pt; line-height: 1.35; flex: 1; height: 100%; }
-      table.main td { border: 0.3pt solid #333; padding: 1pt 2pt; vertical-align: top; }
-      tr.ingredient-row { height: 100%; }
-      tr.ingredient-row td { vertical-align: top; }
-      table.nutrition { width: 100%; border-collapse: collapse; font-size: 4.5pt; }
-      table.nutrition td { border: 0.3pt solid #333; padding: 1pt 2pt; }
+      @page { size: 39mm 48mm; margin: 0; }
+      body { margin: 0; padding: 0.8mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; width: 39mm; height: 48mm; box-sizing: border-box; overflow: hidden; }
+      table.main { width: 100%; border-collapse: collapse; font-size: 4.5pt; line-height: 1.25; table-layout: fixed; }
+      table.main td { border: 0.3pt solid #333; padding: 0.8pt 1.5pt; vertical-align: top; word-break: break-all; }
+      table.main td:first-child { width: 30%; white-space: nowrap; }
+      table.nutrition { width: 100%; border-collapse: collapse; font-size: 4pt; }
+      table.nutrition td { border: 0.3pt solid #333; padding: 0.5pt 1pt; text-align: center; }
     </style>
     </head><body><div style="width:100%;height:100%;display:flex;flex-direction:column;">${labelBox.innerHTML}</div></body></html>`);
   win.document.close();
