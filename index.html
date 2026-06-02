@@ -578,10 +578,10 @@ function previewLabel(){
       <p style="font-size:16px;font-weight:600;">ラベルプレビュー</p>
       <button class="btn btn-primary btn-sm" type="button" onclick="printLabel()">🖨 印刷</button>
     </div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：39mm × 48mm</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：48mm × 39mm（横向き）</p>
 
     <div style="display:flex;justify-content:center;margin-bottom:14px;">
-      <div id="label-preview-box" style="width:222px;height:273px;border:1px solid #333;padding:6px;font-size:8px;line-height:1.5;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;box-sizing:border-box;display:flex;flex-direction:column;">
+      <div id="label-preview-box" style="width:273px;height:222px;border:1px solid #333;padding:6px;font-size:8px;line-height:1.5;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;box-sizing:border-box;display:flex;flex-direction:column;">
         <table style="width:100%;border-collapse:collapse;font-size:8px;flex:1;height:100%;">
           <colgroup><col style="width:40%;"><col style="width:60%;"></colgroup>
           <tr><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;white-space:nowrap;">商品名</td><td style="border:0.5px solid #333;padding:2px 4px;font-weight:600;">${m.name}</td></tr>
@@ -613,7 +613,7 @@ function previewLabel(){
         </table>
       </div>
     </div>
-    <p style="font-size:12px;color:var(--text2);text-align:center;">「印刷」ボタンを押すとブラウザの印刷ダイアログが開きます。<br>用紙サイズを39×48mmに設定してください。</p>
+    <p style="font-size:12px;color:var(--text2);text-align:center;">「印刷」ボタンを押すとブラウザの印刷ダイアログが開きます。<br>用紙サイズを39×48mm・横向きに設定してください。</p>
   `;
   document.getElementById('label-modal').style.display='flex';
 }
@@ -623,14 +623,15 @@ function printLabel(){
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
     <style>
-      @page { size: 39mm 48mm; margin: 0; }
-      body { margin: 0; padding: 1mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; height: 48mm; box-sizing: border-box; }
+      @page { size: 48mm 39mm landscape; margin: 0; }
+      body { margin: 0; padding: 1mm; font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif; width: 48mm; height: 39mm; box-sizing: border-box; }
       .label-wrap { width: 100%; height: 100%; display: flex; flex-direction: column; }
-      table.main { width: 100%; border-collapse: collapse; font-size: 5.5pt; line-height: 1.4; flex: 1; height: 100%; }
+      table.main { width: 100%; border-collapse: collapse; font-size: 5pt; line-height: 1.35; flex: 1; height: 100%; }
       table.main td { border: 0.3pt solid #333; padding: 1pt 2pt; vertical-align: top; }
       tr.ingredient-row { height: 100%; }
       tr.ingredient-row td { vertical-align: top; }
-      table.nutrition { width: 100%; border-collapse: collapse; font-size: 5pt; }
+      table.nutrition { width: 100%; border-collapse: collapse; font-size: 4.5pt; }
+      table.nutrition td { border: 0.3pt solid #333; padding: 1pt 2pt; }
     </style>
     </head><body><div style="width:100%;height:100%;display:flex;flex-direction:column;">${labelBox.innerHTML}</div></body></html>`);
   win.document.close();
