@@ -580,8 +580,8 @@ function previewLabel(){
   const hasNutrition = total.kcal>0||total.protein>0||total.fat>0;
 
   // アレルゲンを自動集計
-  const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ'];
-  const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','まつたけ','もも','やまいも','りんご','ゼラチン','カシューナッツ','ごま','アーモンド'];
+  const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ','カシューナッツ'];
+  const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','もも','やまいも','りんご','ゼラチン','ごま','アーモンド','マカダミアナッツ','ピスタチオ'];
   const showRecommended = document.getElementById('lb-show-recommended-allergens')?.checked;
   const collectedAllergens = new Set();
 
@@ -1196,8 +1196,8 @@ function runPriceSimulation(masterId){
 }
 
 function masterFormHTML(m={}){
-  const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ'];
-  const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','まつたけ','もも','やまいも','りんご','ゼラチン','カシューナッツ','ごま','アーモンド'];
+  const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ','カシューナッツ'];
+  const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','もも','やまいも','りんご','ゼラチン','ごま','アーモンド','マカダミアナッツ','ピスタチオ'];
   const allergens = m.allergens || [];
 
   return `
