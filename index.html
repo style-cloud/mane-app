@@ -961,8 +961,10 @@ function openRecipeDetail(id){
       <tr><th>材料名</th><th>使用量</th><th>単位</th><th>原価</th></tr>
       ${ings.map(i=>`<tr>
         <td>
-          <span style="color:var(--blue);text-decoration:underline;cursor:pointer;"
-            onclick="openEditMaster(${(masterData.find(x=>x.name===i.name)||{}).id})">${i.name}</span>
+          ${i.isRecipe
+            ? `<span style="color:var(--blue);text-decoration:underline;cursor:pointer;" onclick="openRecipeDetail(${(recipes.find(x=>x.name===i.name)||{}).id})">🍳 ${i.name}</span>`
+            : `<span style="color:var(--blue);text-decoration:underline;cursor:pointer;" onclick="openEditMaster(${(masterData.find(x=>x.name===i.name)||{}).id})">${i.name}</span>`
+          }
         </td>
         <td>${i.qty}</td><td>${i.unit}</td>
         <td>${i.cost?i.cost.toFixed(0)+'円':(i.qty&&i.price?(i.qty*i.price).toFixed(0)+'円':'—')}</td>
@@ -1743,7 +1745,10 @@ function renderRecipeEditModal(r){
     <hr class="divider"/>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <p style="font-size:13px;font-weight:600;">材料</p>
-      <button class="btn btn-sm" type="button" onclick="addIngredientRow()">＋ 材料を追加</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" type="button" onclick="addIngredientRow('ingredient')">＋ 食材</button>
+        <button class="btn btn-sm" type="button" onclick="addIngredientRow('recipe')">＋ レシピ</button>
+      </div>
     </div>
     <div id="er-ingredients"></div>
     <div id="er-total" style="text-align:right;font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
@@ -1761,23 +1766,37 @@ function renderIngredientRows(){
     el.innerHTML='<p style="text-align:center;color:var(--text3);font-size:13px;padding:12px;">まだ材料がありません</p>';
     updateRecipeTotal(); return;
   }
-  el.innerHTML=editingIngredients.map((ing,i)=>`
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
-      <input type="text" list="er-list-${i}" value="${ing.name}" onchange="updateIngName(${i},this.value)"
-        placeholder="食材名" style="flex:2;min-width:100px;font-size:13px;"/>
-      <datalist id="er-list-${i}">${masterData.map(m=>`<option value="${m.name}">`).join('')}</datalist>
-      <input type="number" value="${ing.qty}" onchange="updateIngQty(${i},this.value)"
-        placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
-      <select onchange="updateIngUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
-        ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${ing.unit===u?' selected':''}>${u}</option>`).join('')}
-      </select>
-      <span style="font-size:12px;color:var(--text2);min-width:46px;text-align:right;">${ing.cost?'¥'+ing.cost.toFixed(0):'—'}</span>
-      <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;flex:none;">✕</button>
-    </div>`).join('');
+  el.innerHTML=editingIngredients.map((ing,i)=>{
+    const isRecipe = ing.isRecipe;
+    const nameOptions = isRecipe
+      ? recipes.map(r=>`<option value="${r.name}">`)
+      : masterData.map(m=>`<option value="${m.name}">`);
+    return `
+    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:8px;margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:10px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
+        <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;">✕</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <input type="text" list="er-list-${i}" value="${ing.name}" onchange="updateIngName(${i},this.value)"
+          placeholder="${isRecipe?'レシピ名':'食材名'}" style="flex:2;min-width:100px;font-size:13px;"/>
+        <datalist id="er-list-${i}">${nameOptions.join('')}</datalist>
+        <input type="number" value="${ing.qty}" onchange="updateIngQty(${i},this.value)"
+          placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
+        <select onchange="updateIngUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
+          ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${ing.unit===u?' selected':''}>${u}</option>`).join('')}
+        </select>
+        <span style="font-size:12px;color:var(--text2);min-width:46px;text-align:right;">${ing.cost?'¥'+ing.cost.toFixed(0):'—'}</span>
+      </div>
+    </div>`;
+  }).join('');
   updateRecipeTotal();
 }
 
-function addIngredientRow(){ editingIngredients.push({name:'',qty:0,unit:'g',cost:0,price:0}); renderIngredientRows(); }
+function addIngredientRow(type='ingredient'){
+  editingIngredients.push({name:'',qty:0,unit:'g',cost:0,price:0,isRecipe:type==='recipe'});
+  renderIngredientRows();
+}
 function removeIngredient(i){ editingIngredients.splice(i,1); renderIngredientRows(); }
 function updateIngName(i,val){ editingIngredients[i].name=val; recalcIngCost(i); updateRecipeTotal(); }
 function updateIngQty(i,val){ editingIngredients[i].qty=parseFloat(val)||0; recalcIngCost(i); updateRecipeTotal(); }
@@ -1785,9 +1804,21 @@ function updateIngUnit(i,val){ editingIngredients[i].unit=val; recalcIngCost(i);
 
 function recalcIngCost(i){
   const ing=editingIngredients[i];
-  const up=getMasterUnitPrice(ing.name,ing.unit);
-  ing.cost=up!=null?ing.qty*up:0;
-  ing.price=up||0;
+  if(ing.isRecipe){
+    const r=recipes.find(x=>x.name===ing.name);
+    if(r&&r.total_qty&&r.total){
+      let useQty=ing.qty;
+      if(r.total_unit==='kg'&&ing.unit==='g') useQty=ing.qty/1000;
+      else if(r.total_unit==='g'&&ing.unit==='kg') useQty=ing.qty*1000;
+      else if(r.total_unit==='l'&&ing.unit==='ml') useQty=ing.qty/1000;
+      else if(r.total_unit==='ml'&&ing.unit==='l') useQty=ing.qty*1000;
+      ing.cost=(r.total/r.total_qty)*useQty;
+    } else ing.cost=0;
+  } else {
+    const up=getMasterUnitPrice(ing.name,ing.unit);
+    ing.cost=up!=null?ing.qty*up:0;
+    ing.price=up||0;
+  }
   const rows=document.querySelectorAll('#er-ingredients > div');
   if(rows[i]){ const s=rows[i].querySelector('span[style*="min-width:46px"]'); if(s) s.textContent=ing.cost?'¥'+ing.cost.toFixed(0):'—'; }
 }
