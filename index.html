@@ -1629,8 +1629,8 @@ function renderComponentRows(){
   el.innerHTML = editingComponents.map((c,i)=>{
     const isRecipe = c.isRecipe;
     const nameOptions = isRecipe
-      ? recipes.map(r=>`<option value="${r.name}">`)
-      : masterData.map(m=>`<option value="${m.name}">`);
+      ? recipes.map(r=>`<option value="${r.name}"${r.name===c.name?' selected':''}>${r.name}</option>`).join('')
+      : masterData.map(m=>`<option value="${m.name}"${m.name===c.name?' selected':''}>${m.name}</option>`).join('');
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -1638,10 +1638,11 @@ function renderComponentRows(){
         <button class="btn btn-danger" type="button" onclick="removeComponent(${i})" style="padding:2px 8px;font-size:11px;">削除</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <input type="text" list="em-list-${i}" value="${c.name}" onchange="updateComponentName(${i},this.value)"
-          placeholder="${isRecipe?'レシピ名':'食材名'}" style="flex:2;min-width:120px;font-size:13px;"/>
-        <datalist id="em-list-${i}">${nameOptions.join('')}</datalist>
-        <input type="number" value="${c.qty}" onchange="updateComponentQty(${i},this.value)"
+        <select onchange="updateComponentName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
+          <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
+          ${nameOptions}
+        </select>
+        <input type="number" value="${c.qty||''}" onchange="updateComponentQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateComponentUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
           ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${c.unit===u?' selected':''}>${u}</option>`).join('')}
@@ -1769,8 +1770,8 @@ function renderIngredientRows(){
   el.innerHTML=editingIngredients.map((ing,i)=>{
     const isRecipe = ing.isRecipe;
     const nameOptions = isRecipe
-      ? recipes.map(r=>`<option value="${r.name}">`)
-      : masterData.map(m=>`<option value="${m.name}">`);
+      ? recipes.map(r=>`<option value="${r.name}"${r.name===ing.name?' selected':''}>${r.name}</option>`).join('')
+      : masterData.map(m=>`<option value="${m.name}"${m.name===ing.name?' selected':''}>${m.name}</option>`).join('');
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:8px;margin-bottom:6px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -1778,10 +1779,11 @@ function renderIngredientRows(){
         <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;">✕</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <input type="text" list="er-list-${i}" value="${ing.name}" onchange="updateIngName(${i},this.value)"
-          placeholder="${isRecipe?'レシピ名':'食材名'}" style="flex:2;min-width:100px;font-size:13px;"/>
-        <datalist id="er-list-${i}">${nameOptions.join('')}</datalist>
-        <input type="number" value="${ing.qty}" onchange="updateIngQty(${i},this.value)"
+        <select onchange="updateIngName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
+          <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
+          ${nameOptions}
+        </select>
+        <input type="number" value="${ing.qty||''}" onchange="updateIngQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateIngUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
           ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${ing.unit===u?' selected':''}>${u}</option>`).join('')}
