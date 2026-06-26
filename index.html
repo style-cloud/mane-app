@@ -1653,7 +1653,6 @@ function renderComponentRows(){
         <select onchange="updateComponentName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
           <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
           ${filtered.map(o=>`<option value="${o.name}"${o.name===c.name?' selected':''}>${o.name}</option>`).join('')}
-        </select>
         <input type="number" value="${c.qty||''}" onchange="updateComponentQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateComponentUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
@@ -1678,6 +1677,103 @@ function fuzzyMatch(name, query){
   const n = name.toLowerCase();
   return n.includes(q) || n.includes(toKatakana(q)) || n.includes(toHiragana(q));
 }
+
+// ========== ピッカーモーダル（食材・レシピ選択）==========
+let _pickerContext = null;
+
+function openPickerModal(type, index){
+  _pickerContext = {type, index};
+  renderPickerModal('');
+}
+
+function renderPickerModal(query){
+  const ctx = _pickerContext;
+  if(!ctx) return;
+  const isComponent = ctx.type === 'component';
+  const item = isComponent ? editingComponents[ctx.index] : editingIngredients[ctx.index];
+  const isRecipe = item.isRecipe;
+  const options = isRecipe ? recipes : masterData;
+  const filtered = query
+    ? options.filter(o=>fuzzyMatch(o.name, query))
+    : options;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-sm" type="button" onclick="closePicker()">← 戻る</button>
+      <p style="font-size:16px;font-weight:600;">${isRecipe?'レシピを選択':'食材を選択'}</p>
+    </div>
+    <input type="text" id="picker-search" placeholder="🔍 名前で検索..."
+      style="width:100%;font-size:14px;margin-bottom:10px;"
+      value="${query}"
+      oninput="renderPickerModal(this.value)"/>
+    <div style="max-height:55vh;overflow-y:auto;">
+      ${filtered.length===0
+        ? '<p style="text-align:center;color:var(--text3);padding:16px;">見つかりませんでした</p>'
+        : filtered.map(o=>`
+          <div onclick="selectPickerItem('${o.name.replace(/'/g,"\'")}')"
+            style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;font-size:14px;${o.name===item.name?'background:var(--bg2);font-weight:600;':''}">
+            ${o.name}
+          </div>`).join('')}
+    </div>`;
+  document.getElementById('modal').style.display='flex';
+  // フォーカスを検索ボックスに
+  setTimeout(()=>{
+    const el = document.getElementById('picker-search');
+    if(el) el.focus();
+  }, 100);
+}
+
+function selectPickerItem(name){
+  const ctx = _pickerContext;
+  if(!ctx) return;
+  if(ctx.type === 'component'){
+    updateComponentName(ctx.index, name);
+    renderMenuEditModal(null); // 元のモーダルに戻る（編集中データは保持）
+    // 編集中のモーダルを再描画
+    const m = menus.find(x=>x.id===ctx._menuId)||null;
+    renderMenuEditModalKeepState();
+  } else {
+    updateIngName(ctx.index, name);
+    renderRecipeEditModalKeepState();
+  }
+  _pickerContext = null;
+}
+
+function closePicker(){
+  const ctx = _pickerContext;
+  _pickerContext = null;
+  if(ctx && ctx.type==='component') renderMenuEditModalKeepState();
+  else renderRecipeEditModalKeepState();
+}
+
+function renderMenuEditModalKeepState(){
+  // 現在のeditingComponentsを保持したままメニュー編集モーダルを再描画
+  const body = document.getElementById('modal-body');
+  // 名前・売価・名称を一時保存
+  const savedName = body.querySelector('#em-name')?.value||'';
+  const savedPrice = body.querySelector('#em-price')?.value||'';
+  const savedCat = body.querySelector('#em-category')?.value||'';
+  renderMenuEditModal(null);
+  setTimeout(()=>{
+    if(document.getElementById('em-name')) document.getElementById('em-name').value=savedName;
+    if(document.getElementById('em-price')) document.getElementById('em-price').value=savedPrice;
+    if(document.getElementById('em-category')) document.getElementById('em-category').value=savedCat;
+  },0);
+}
+
+function renderRecipeEditModalKeepState(){
+  const body = document.getElementById('modal-body');
+  const savedName = body.querySelector('#er-name')?.value||'';
+  const savedQty = body.querySelector('#er-total-qty')?.value||'';
+  const savedUnit = body.querySelector('#er-total-unit')?.value||'g';
+  renderRecipeEditModal(null);
+  setTimeout(()=>{
+    if(document.getElementById('er-name')) document.getElementById('er-name').value=savedName;
+    if(document.getElementById('er-total-qty')) document.getElementById('er-total-qty').value=savedQty;
+    if(document.getElementById('er-total-unit')) document.getElementById('er-total-unit').value=savedUnit;
+  },0);
+}
+
 function filterComponent(i, val){
   editingComponents[i]._search = val;
   renderComponentRows();
@@ -1810,16 +1906,10 @@ function renderIngredientRows(){
         <span style="font-size:10px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
         <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;">✕</button>
       </div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
-        <input type="text" id="ing-search-${i}" value="${ing._search||''}" placeholder="🔍 名前で絞り込む"
-          style="flex:1;font-size:13px;"/>
-        <button class="btn btn-sm" type="button" onclick="filterIngredient(${i},document.getElementById('ing-search-${i}').value)" style="flex:none;white-space:nowrap;">絞込</button>
-      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <select onchange="updateIngName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
-          <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
-          ${filtered.map(o=>`<option value="${o.name}"${o.name===ing.name?' selected':''}>${o.name}</option>`).join('')}
-        </select>
+        <div onclick="openPickerModal('ingredient',${i})" style="flex:2;min-width:120px;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;cursor:pointer;color:${ing.name?'inherit':'var(--text3)'};">
+          ${ing.name||`${isRecipe?'レシピを選択 ▼':'食材を選択 ▼'}`}
+        </div>
         <input type="number" value="${ing.qty||''}" onchange="updateIngQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateIngUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
