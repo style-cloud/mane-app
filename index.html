@@ -1726,7 +1726,7 @@ function renderPickerModal(filterCat){
       ${filtered.length===0
         ? '<p style="text-align:center;color:var(--text3);padding:16px;">この行に該当する項目がありません</p>'
         : filtered.map(o=>`
-          <div onclick="selectPickerItem('${o.name.replace(/\/g,'\\').replace(/'/g,"\'")}')"
+          <div onclick="selectPickerItem(this.getAttribute('data-name'))" data-name="${o.name.replace(/"/g,'&quot;')}"
             style="padding:12px;border-bottom:0.5px solid var(--border);cursor:pointer;font-size:14px;${o.name===item.name?'background:var(--bg2);font-weight:600;':''}">
             ${o.name}
           </div>`).join('')}
