@@ -1286,9 +1286,9 @@ async function saveMasterAdd(){
   setSyncing();
   const res=await sb.from('master_ingredients').insert(item);
   if(res.error){setError('保存失敗');return;}
-  // グループ設定を保存
   await saveIngredientGroup(item.name);
   await loadAll();
+  await recalcAll();
   closeModal();
   alert(`「${item.name}」を追加しました！`);
 }
@@ -1299,9 +1299,9 @@ async function saveMasterEdit(id){
   setSyncing();
   const res=await sb.from('master_ingredients').update(item).eq('id',id);
   if(res.error){setError('保存失敗');return;}
-  // グループ設定を保存
   await saveIngredientGroup(item.name);
   await loadAll();
+  await recalcAll();
   closeModal();
   alert(`「${item.name}」を更新しました！`);
 }
@@ -1977,7 +1977,10 @@ async function saveRecipeAdd(){
   setSyncing();
   const res=await sb.from('recipes').insert({name,ingredients,total,unit,total_qty,total_unit,cat:'その他',yield:1,price:0,rate:null});
   if(res.error){setError('保存失敗');console.error(res.error);return;}
-  await loadAll(); closeModal(); alert(`「${name}」を追加しました！`);
+  await loadAll();
+  await recalcAll();
+  closeModal();
+  alert(`「${name}」を追加しました！`);
 }
 
 async function saveRecipeEdit(id){
@@ -1991,7 +1994,10 @@ async function saveRecipeEdit(id){
   setSyncing();
   const res=await sb.from('recipes').update({name,ingredients,total,unit,total_qty,total_unit}).eq('id',id);
   if(res.error){setError('保存失敗');console.error(res.error);return;}
-  await loadAll(); closeModal(); alert(`「${name}」を保存しました！`);
+  await loadAll();
+  await recalcAll();
+  closeModal();
+  alert(`「${name}」を保存しました！`);
 }
 
 // ---- CSV取込モード切替 ----
