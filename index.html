@@ -1678,15 +1678,6 @@ function fuzzyMatch(name, query){
   const n = name.toLowerCase();
   return n.includes(q) || n.includes(toKatakana(q)) || n.includes(toHiragana(q));
 }
-let _debounceTimer = null;
-function debounceFilter(type, i, val){
-  clearTimeout(_debounceTimer);
-  _debounceTimer = setTimeout(()=>{
-    if(type==='component') filterComponent(i, val);
-    else filterIngredient(i, val);
-  }, 300);
-}
-
 function filterComponent(i, val){
   editingComponents[i]._search = val;
   renderComponentRows();
@@ -1819,10 +1810,10 @@ function renderIngredientRows(){
         <span style="font-size:10px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
         <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;">✕</button>
       </div>
-      <div style="margin-bottom:5px;">
-        <input type="text" value="${ing._search||''}" placeholder="🔍 検索して絞り込む"
-          oninput="debounceFilter('ingredient',${i},this.value)"
-          style="width:100%;font-size:13px;"/>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+        <input type="text" id="ing-search-${i}" value="${ing._search||''}" placeholder="🔍 名前で絞り込む"
+          style="flex:1;font-size:13px;"/>
+        <button class="btn btn-sm" type="button" onclick="filterIngredient(${i},document.getElementById('ing-search-${i}').value)" style="flex:none;white-space:nowrap;">絞込</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select onchange="updateIngName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
