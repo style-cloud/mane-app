@@ -1636,7 +1636,7 @@ function renderComponentRows(){
     const isRecipe = c.isRecipe;
     const options = isRecipe ? recipes : masterData;
     const filtered = c._search
-      ? options.filter(o=>o.name.includes(c._search))
+      ? options.filter(o=>fuzzyMatch(o.name, c._search))
       : options;
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;">
@@ -1666,6 +1666,18 @@ function renderComponentRows(){
   updateMenuTotal();
 }
 
+function toKatakana(str){
+  return str.replace(/[ぁ-ん]/g, s=>String.fromCharCode(s.charCodeAt(0)+0x60));
+}
+function toHiragana(str){
+  return str.replace(/[ァ-ン]/g, s=>String.fromCharCode(s.charCodeAt(0)-0x60));
+}
+function fuzzyMatch(name, query){
+  if(!query) return true;
+  const q = query.toLowerCase();
+  const n = name.toLowerCase();
+  return n.includes(q) || n.includes(toKatakana(q)) || n.includes(toHiragana(q));
+}
 function filterComponent(i, val){
   editingComponents[i]._search = val;
   renderComponentRows();
@@ -1790,7 +1802,7 @@ function renderIngredientRows(){
     const isRecipe = ing.isRecipe;
     const options = isRecipe ? recipes : masterData;
     const filtered = ing._search
-      ? options.filter(o=>o.name.includes(ing._search))
+      ? options.filter(o=>fuzzyMatch(o.name, ing._search))
       : options;
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:8px;margin-bottom:6px;">
@@ -1800,7 +1812,9 @@ function renderIngredientRows(){
       </div>
       <div style="margin-bottom:5px;">
         <input type="text" value="${ing._search||''}" placeholder="🔍 検索して絞り込む"
-          oninput="filterIngredient(${i},this.value)"
+          oninput="if(!this._composing)filterIngredient(${i},this.value)"
+          oncompositionstart="this._composing=true"
+          oncompositionend="this._composing=false;filterIngredient(${i},this.value)"
           style="width:100%;font-size:13px;"/>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
