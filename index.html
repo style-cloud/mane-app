@@ -1634,25 +1634,17 @@ function renderComponentRows(){
   }
   el.innerHTML = editingComponents.map((c,i)=>{
     const isRecipe = c.isRecipe;
-    const options = isRecipe ? recipes : masterData;
-    const filtered = c._search
-      ? options.filter(o=>fuzzyMatch(o.name, c._search))
-      : options;
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <span style="font-size:11px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
         <button class="btn btn-danger" type="button" onclick="removeComponent(${i})" style="padding:2px 8px;font-size:11px;">削除</button>
       </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
-        <input type="text" value="${c._search||''}" placeholder="🔍 検索して絞り込む"
-          oninput="filterComponent(${i},this.value)"
-          style="flex:1;min-width:120px;font-size:13px;"/>
-      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <select onchange="updateComponentName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
-          <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
-          ${filtered.map(o=>`<option value="${o.name}"${o.name===c.name?' selected':''}>${o.name}</option>`).join('')}
+        <div onclick="openPickerModal('component',${i})"
+          style="flex:2;min-width:120px;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;cursor:pointer;color:${c.name?'inherit':'var(--text3)'};">
+          ${c.name||(isRecipe?'レシピを選択 ▼':'食材を選択 ▼')}
+        </div>
         <input type="number" value="${c.qty||''}" onchange="updateComponentQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateComponentUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
