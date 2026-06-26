@@ -419,13 +419,13 @@ async function loadLabelInfo(){
   try{
     const res = await sb.from('label_info').select('*').eq('menu_id', menuId).single();
     if(res.data){
-      document.getElementById('lb-category').value = res.data.category||'';
+      document.getElementById('lb-category').value = res.data.category || m.category || '';
       document.getElementById('lb-ingredients').value = res.data.ingredients||'';
       document.getElementById('lb-content').value = res.data.content||'';
       document.getElementById('lb-storage').value = res.data.storage||'';
       labelInfoCache[menuId] = res.data;
     } else {
-      document.getElementById('lb-category').value = '焼菓子';
+      document.getElementById('lb-category').value = m.category || '焼菓子';
       document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
       // 原材料を自動生成
       const autoIngredients = generateIngredientsList(m);
@@ -435,7 +435,7 @@ async function loadLabelInfo(){
       document.getElementById('lb-content').value = '';
     }
   }catch(e){
-    document.getElementById('lb-category').value = '焼菓子';
+    document.getElementById('lb-category').value = m.category || '焼菓子';
     document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
     const autoIngredients = generateIngredientsList(m);
     if(autoIngredients) document.getElementById('lb-ingredients').value = autoIngredients;
@@ -1598,6 +1598,12 @@ function renderMenuEditModal(m){
     </div>
     <div class="form-row"><span class="form-label">メニュー名</span><input type="text" id="em-name" value="${m?m.name:''}" placeholder="例：ピスタチオタルト"/></div>
     <div class="form-row">
+      <span class="form-label">名称</span>
+      <select id="em-category" style="flex:1;font-size:14px;">
+        ${['','焼き菓子','生菓子','和菓子','パン','チョコレート','アイスクリーム','その他'].map(v=>`<option value="${v}"${(m&&m.category||'')=== v?' selected':''}>${v||'選択してください'}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-row">
       <span class="form-label">売価</span>
       <input type="number" id="em-price" value="${m&&m.price?m.price:''}" placeholder="例：4167" style="width:120px;flex:none;"/>
       <span style="font-size:13px;color:var(--text2);">円（税抜）</span>
@@ -1628,19 +1634,25 @@ function renderComponentRows(){
   }
   el.innerHTML = editingComponents.map((c,i)=>{
     const isRecipe = c.isRecipe;
-    const nameOptions = isRecipe
-      ? recipes.map(r=>`<option value="${r.name}"${r.name===c.name?' selected':''}>${r.name}</option>`).join('')
-      : masterData.map(m=>`<option value="${m.name}"${m.name===c.name?' selected':''}>${m.name}</option>`).join('');
+    const options = isRecipe ? recipes : masterData;
+    const filtered = c._search
+      ? options.filter(o=>o.name.includes(c._search))
+      : options;
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <span style="font-size:11px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
         <button class="btn btn-danger" type="button" onclick="removeComponent(${i})" style="padding:2px 8px;font-size:11px;">削除</button>
       </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+        <input type="text" value="${c._search||''}" placeholder="🔍 検索して絞り込む"
+          oninput="filterComponent(${i},this.value)"
+          style="flex:1;min-width:120px;font-size:13px;"/>
+      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select onchange="updateComponentName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
           <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
-          ${nameOptions}
+          ${filtered.map(o=>`<option value="${o.name}"${o.name===c.name?' selected':''}>${o.name}</option>`).join('')}
         </select>
         <input type="number" value="${c.qty||''}" onchange="updateComponentQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
@@ -1652,6 +1664,11 @@ function renderComponentRows(){
     </div>`;
   }).join('');
   updateMenuTotal();
+}
+
+function filterComponent(i, val){
+  editingComponents[i]._search = val;
+  renderComponentRows();
 }
 
 function addComponentRow(type){
@@ -1690,12 +1707,13 @@ function updateMenuTotal(){
 async function saveMenuAdd(){
   const name=document.getElementById('em-name').value.trim();
   const price=parseFloat(document.getElementById('em-price').value)||0;
+  const category=document.getElementById('em-category').value;
   if(!name){alert('メニュー名を入力してください');return;}
   const components=editingComponents.filter(c=>c.name);
   const total=components.reduce((s,c)=>s+(c.cost||0),0);
   const rate=price&&total?total/price*100:null;
   setSyncing();
-  const res=await sb.from('menus').insert({name,components,total,price,rate});
+  const res=await sb.from('menus').insert({name,components,total,price,rate,category});
   if(res.error){setError('保存失敗');console.error(res.error);return;}
   await loadAll(); closeModal(); alert(`「${name}」を追加しました！`);
 }
@@ -1703,12 +1721,13 @@ async function saveMenuAdd(){
 async function saveMenuEdit(id){
   const name=document.getElementById('em-name').value.trim();
   const price=parseFloat(document.getElementById('em-price').value)||0;
+  const category=document.getElementById('em-category').value;
   if(!name){alert('メニュー名を入力してください');return;}
   const components=editingComponents.filter(c=>c.name);
   const total=components.reduce((s,c)=>s+(c.cost||0),0);
   const rate=price&&total?total/price*100:null;
   setSyncing();
-  const res=await sb.from('menus').update({name,components,total,price,rate}).eq('id',id);
+  const res=await sb.from('menus').update({name,components,total,price,rate,category}).eq('id',id);
   if(res.error){setError('保存失敗');console.error(res.error);return;}
   await loadAll(); closeModal(); alert(`「${name}」を保存しました！`);
 }
@@ -1769,19 +1788,25 @@ function renderIngredientRows(){
   }
   el.innerHTML=editingIngredients.map((ing,i)=>{
     const isRecipe = ing.isRecipe;
-    const nameOptions = isRecipe
-      ? recipes.map(r=>`<option value="${r.name}"${r.name===ing.name?' selected':''}>${r.name}</option>`).join('')
-      : masterData.map(m=>`<option value="${m.name}"${m.name===ing.name?' selected':''}>${m.name}</option>`).join('');
+    const options = isRecipe ? recipes : masterData;
+    const filtered = ing._search
+      ? options.filter(o=>o.name.includes(ing._search))
+      : options;
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:8px;margin-bottom:6px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
         <span style="font-size:10px;font-weight:600;color:var(--text2);">${isRecipe?'🍳 レシピ':'🥚 食材'}</span>
         <button class="btn btn-danger" type="button" onclick="removeIngredient(${i})" style="padding:2px 8px;font-size:11px;">✕</button>
       </div>
+      <div style="margin-bottom:5px;">
+        <input type="text" value="${ing._search||''}" placeholder="🔍 検索して絞り込む"
+          oninput="filterIngredient(${i},this.value)"
+          style="width:100%;font-size:13px;"/>
+      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select onchange="updateIngName(${i},this.value)" style="flex:2;min-width:120px;font-size:13px;">
           <option value="">${isRecipe?'レシピを選択':'食材を選択'}</option>
-          ${nameOptions}
+          ${filtered.map(o=>`<option value="${o.name}"${o.name===ing.name?' selected':''}>${o.name}</option>`).join('')}
         </select>
         <input type="number" value="${ing.qty||''}" onchange="updateIngQty(${i},this.value)"
           placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
@@ -1793,6 +1818,11 @@ function renderIngredientRows(){
     </div>`;
   }).join('');
   updateRecipeTotal();
+}
+
+function filterIngredient(i, val){
+  editingIngredients[i]._search = val;
+  renderIngredientRows();
 }
 
 function addIngredientRow(type='ingredient'){
