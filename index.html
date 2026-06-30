@@ -20,10 +20,7 @@
   --radius:10px;--radius-sm:6px;
 }
 body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;min-height:100vh;}
-.elegant{font-family:'Georgia','Times New Roman',serif;font-style:italic;}
 .header{background:var(--text);color:var(--bg);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-bottom:2px solid var(--gold);}
-.header-title{font-size:15px;font-weight:600;letter-spacing:0.12em;}
-.header-sub{font-size:10px;opacity:0.55;margin-top:3px;letter-spacing:0.08em;}
 .sync-pill{display:flex;align-items:center;gap:6px;font-size:11px;opacity:0.8;}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;}
 .sync-dot.loading{background:#FACC15;animation:pulse 1s infinite;}
@@ -40,8 +37,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .form-label{font-size:13px;color:var(--text2);min-width:78px;flex-shrink:0;}
 input,select{font-size:14px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;color:var(--text);width:100%;}
 input:focus,select:focus{outline:none;border-color:var(--text);}
-.igrid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 30px;gap:5px;align-items:center;margin-bottom:5px;}
-.ch{font-size:11px;color:var(--text3);font-weight:500;}
 .btn{padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-weight:500;border:1px solid var(--border2);background:#fff;color:var(--text);transition:background 0.15s;}
 .btn:hover{background:var(--bg2);}
 .btn:disabled{opacity:0.5;cursor:not-allowed;}
@@ -59,15 +54,12 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
 .met-value.bad{color:var(--red);}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;}
 .b-ok{background:var(--green-bg);color:var(--green);}
-.b-gold{background:var(--gold-bg);color:var(--gold);}
 .b-warn{background:var(--yellow-bg);color:var(--yellow);}
 .b-bad{background:var(--red-bg);color:var(--red);}
 .b-none{background:var(--bg2);color:var(--text3);}
-.b-blue{background:var(--blue-bg);color:var(--blue);}
 .list-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:border-color 0.15s,background 0.15s,box-shadow 0.15s;}
 .list-item:hover{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 2px 8px rgba(196,163,90,0.12);}
 .item-name{font-size:14px;font-weight:500;flex:1;}
-.item-meta{font-size:11px;color:var(--text3);}
 .empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:14px;}
 .warning-box{background:var(--yellow-bg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--yellow);}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:flex;align-items:center;justify-content:center;}
@@ -82,18 +74,54 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
 .drop-zone:hover{background:var(--bg2);}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.sub-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--blue-bg);color:var(--blue);font-weight:500;margin-left:4px;}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
+.login-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:36px 28px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(44,24,16,0.08);}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--text);letter-spacing:0.12em;text-align:center;border-bottom:1px solid var(--gold);display:inline-block;padding-bottom:4px;}
+.login-logo-wrap{text-align:center;margin-bottom:28px;}
+.login-tab{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.login-tab button{flex:1;padding:10px;background:none;border:none;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;}
+.login-tab button.active{color:var(--text);border-bottom:2px solid var(--gold);font-weight:600;}
+.login-error{background:var(--red-bg);color:var(--red);font-size:12px;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:12px;display:none;}
 </style>
 </head>
 <body>
+
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <span class="login-logo">Recette</span>
+    </div>
+    <div class="login-tab">
+      <button class="active" id="login-tab-signin" onclick="switchAuthMode('signin')">ログイン</button>
+      <button id="login-tab-signup" onclick="switchAuthMode('signup')">新規登録</button>
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <div class="form-row"><span class="form-label" style="min-width:60px;">メール</span><input type="email" id="auth-email" placeholder="you@example.com"/></div>
+    <div class="form-row"><span class="form-label" style="min-width:60px;">パスワード</span><input type="password" id="auth-password" placeholder="6文字以上"/></div>
+    <button class="btn btn-primary" type="button" id="auth-submit-btn" onclick="submitAuth()" style="width:100%;margin-top:10px;padding:10px;">ログイン</button>
+    <div style="text-align:center;margin-top:16px;">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">または</div>
+      <button class="btn" type="button" onclick="signInWithGoogle()" style="width:100%;padding:10px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.5 29.6 4 24 4c-7.7 0-14.3 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.3C29.3 35.4 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.2 5.3C39.9 36.9 44 31.1 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        Googleでログイン
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="app-screen" style="display:none;">
 
 <div class="header">
   <div style="display:flex;align-items:center;">
     <span style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#f5ede0;letter-spacing:0.12em;border-bottom:1px solid #a08060;padding-bottom:2px;">Recette</span>
   </div>
-  <div class="sync-pill">
-    <div class="sync-dot loading" id="sdot"></div>
-    <span id="stxt">接続中...</span>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span id="current-store-name" style="font-size:11px;opacity:0.75;"></span>
+    <div class="sync-pill">
+      <div class="sync-dot loading" id="sdot"></div>
+      <span id="stxt">接続中...</span>
+    </div>
+    <button class="btn btn-sm" type="button" onclick="signOut()" style="background:transparent;border-color:rgba(255,255,255,0.3);color:#f5ede0;">ログアウト</button>
   </div>
 </div>
 
@@ -155,7 +183,6 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
       <button class="btn btn-sm" id="mode-master-btn" onclick="setImportMode('master')" type="button">食材マスターCSV</button>
     </div>
 
-    <!-- メニューCSV -->
     <div id="import-menu-panel">
       <div class="card">
         <p class="card-title">メニュー CSV 一括取込</p>
@@ -182,7 +209,6 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
       </div>
     </div>
 
-    <!-- レシピCSV -->
     <div id="import-recipe-panel" style="display:none;">
       <div class="card">
         <p class="card-title">レシピ CSV 一括取込</p>
@@ -209,7 +235,6 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
       </div>
     </div>
 
-    <!-- 食材マスターCSV -->
     <div id="import-master-panel" style="display:none;">
       <div class="card">
         <p class="card-title">食材マスター CSV 取込</p>
@@ -237,7 +262,6 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
     </div>
   </div>
 
-
   <!-- ラベル印刷 -->
   <div class="sec" id="tab-label">
     <div class="card">
@@ -248,7 +272,7 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
       <div style="margin:10px 0;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
           <input type="checkbox" id="lb-show-recommended-allergens" style="width:16px;height:16px;flex:none;"/>
-          <span>推奨アレルゲン（20品目）もラベルに表示する<br><span style="font-size:11px;color:var(--text2);">義務表示8品目は常に表示されます</span></span>
+          <span>推奨アレルゲン（20品目）もラベルに表示する<br><span style="font-size:11px;color:var(--text2);">義務表示9品目は常に表示されます</span></span>
         </label>
       </div>
       <div style="text-align:right;">
@@ -272,7 +296,7 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
         <div class="form-row" style="align-items:flex-start;">
           <span class="form-label" style="margin-top:8px;">原材料名</span>
           <div style="flex:1;">
-            <textarea id="lb-ingredients" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;resize:vertical;font-family:inherit;" placeholder="小麦粉（国内産）、バター、砂糖、卵、塩&#10;（小麦、卵、乳成分を含む）"></textarea>
+            <textarea id="lb-ingredients" rows="3" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;resize:vertical;font-family:inherit;" placeholder="小麦粉（国内産）、バター、砂糖、卵、塩"></textarea>
             <button class="btn btn-sm" type="button" onclick="regenIngredients()" style="margin-top:4px;font-size:12px;">🔄 原材料を自動生成</button>
           </div>
         </div>
@@ -283,7 +307,6 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
         </div>
         <div class="form-row"><span class="form-label">賞味期限</span><input type="date" id="lb-expiry"/></div>
 
-        <!-- 栄養成分プレビュー -->
         <div id="lb-nutrition-preview" style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px 12px;margin:8px 0;font-size:12px;">
           <p style="font-weight:600;margin-bottom:4px;">栄養成分（メニューから自動取得）</p>
           <p id="lb-nutrition-text" style="color:var(--text2);">商品を選択すると表示されます</p>
@@ -299,11 +322,9 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
 
 </div>
 
-<!-- トップへ戻るボタン -->
 <button id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
   style="display:none;position:fixed;bottom:24px;right:20px;width:44px;height:44px;border-radius:50%;background:#3a2210;color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.35);z-index:999;align-items:center;justify-content:center;">↑</button>
 
-<!-- ラベルプレビューモーダル -->
 <div class="modal-overlay" id="label-modal" style="display:none;" onclick="closeLabelModal(event)">
   <div class="modal-sheet" style="max-height:95vh;">
     <div class="modal-handle"></div>
@@ -311,12 +332,13 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
   </div>
 </div>
 
-<!-- 詳細モーダル -->
 <div class="modal-overlay" id="modal" style="display:none;" onclick="closeModal(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div id="modal-body"></div>
   </div>
+</div>
+
 </div>
 
 <script>
@@ -325,14 +347,103 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let menus=[], recipes=[], masterData=[], ingredientGroups=[];
+let currentUser = null;
+let currentStoreId = null;
+let authMode = 'signin';
 
 function setSyncing(){ document.getElementById('sdot').className='sync-dot loading'; document.getElementById('stxt').textContent='保存中...'; }
 function setSynced(){ document.getElementById('sdot').className='sync-dot'; document.getElementById('stxt').textContent='全スタッフと同期済み'; }
 function setError(msg){ document.getElementById('sdot').className='sync-dot error'; document.getElementById('stxt').textContent=msg||'エラー'; }
 
+// ========== 認証関連 ==========
+function switchAuthMode(mode){
+  authMode = mode;
+  document.getElementById('login-tab-signin').classList.toggle('active', mode==='signin');
+  document.getElementById('login-tab-signup').classList.toggle('active', mode==='signup');
+  document.getElementById('auth-submit-btn').textContent = mode==='signin' ? 'ログイン' : '新規登録';
+  document.getElementById('login-error').style.display='none';
+}
 
-// ---- ラベル印刷機能 ----
-// ---- トップへ戻るボタン ----
+function showLoginError(msg){
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function submitAuth(){
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if(!email || !password){ showLoginError('メールアドレスとパスワードを入力してください'); return; }
+  const btn = document.getElementById('auth-submit-btn');
+  btn.disabled = true;
+  try{
+    if(authMode==='signin'){
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      await onAuthSuccess(data.user);
+    } else {
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      if(data.user && !data.session){
+        showLoginError('確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。');
+        btn.disabled = false;
+        return;
+      }
+      await onAuthSuccess(data.user);
+    }
+  } catch(e){
+    showLoginError(e.message || 'ログインに失敗しました');
+  }
+  btn.disabled = false;
+}
+
+async function signInWithGoogle(){
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+  if(error) showLoginError(error.message);
+}
+
+async function onAuthSuccess(user){
+  currentUser = user;
+  const { data: storeUsers, error } = await sb.from('store_users').select('store_id, stores(name)').eq('user_id', user.id);
+  if(error || !storeUsers || !storeUsers.length){
+    showLoginError('このアカウントはどの店舗にも所属していません。運営者にお問い合わせください。');
+    await sb.auth.signOut();
+    return;
+  }
+  currentStoreId = storeUsers[0].store_id;
+  const storeName = storeUsers[0].stores ? storeUsers[0].stores.name : '';
+  document.getElementById('current-store-name').textContent = storeName;
+  showApp();
+}
+
+async function signOut(){
+  if(!confirm('ログアウトしますか？')) return;
+  await sb.auth.signOut();
+  currentUser = null;
+  currentStoreId = null;
+  showLogin();
+}
+
+function showLogin(){
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+function showApp(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  loadAll();
+}
+
+async function checkAuthOnLoad(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session && session.user){
+    await onAuthSuccess(session.user);
+  } else {
+    showLogin();
+  }
+}
+
 window.addEventListener('scroll', ()=>{
   const btn = document.getElementById('scroll-top-btn');
   if(!btn) return;
@@ -343,14 +454,11 @@ let labelSettings = {manufacturer:'', address:''};
 let labelInfoCache = {};
 
 function initLabelTab(){
-  // 商品セレクトを更新
   const sel = document.getElementById('lb-menu-select');
   const current = sel.value;
   sel.innerHTML = '<option value="">商品を選択してください</option>' +
     menus.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   if(current) sel.value = current;
-
-  // 共通設定を読み込み
   const saved = localStorage.getItem('mane_label_settings');
   if(saved){
     labelSettings = JSON.parse(saved);
@@ -358,7 +466,6 @@ function initLabelTab(){
     document.getElementById('lb-address').value = labelSettings.address||'';
   }
 }
-
 
 function regenIngredients(){
   const menuId = document.getElementById('lb-menu-select').value;
@@ -384,11 +491,8 @@ async function loadLabelInfo(){
   const menuId = document.getElementById('lb-menu-select').value;
   if(!menuId){ document.getElementById('lb-form').style.display='none'; return; }
   document.getElementById('lb-form').style.display='block';
-
-  // 栄養成分を取得
   const m = menus.find(x=>x.id==menuId);
   if(m){
-    // 栄養計算
     const comps = Array.isArray(m.components)?m.components:[];
     let total = {kcal:0,protein:0,fat:0,carbs:0,salt:0};
     comps.forEach(c=>{
@@ -414,8 +518,6 @@ async function loadLabelInfo(){
       ? `エネルギー ${total.kcal.toFixed(1)}kcal　たんぱく質 ${total.protein.toFixed(1)}g　脂質 ${total.fat.toFixed(1)}g　炭水化物 ${total.carbs.toFixed(1)}g　食塩相当量 ${total.salt.toFixed(2)}g`
       : '栄養成分が未登録です（食材マスターに栄養成分を入力してください）';
   }
-
-  // 保存済みラベル情報を取得
   try{
     const res = await sb.from('label_info').select('*').eq('menu_id', menuId).single();
     if(res.data){
@@ -427,7 +529,6 @@ async function loadLabelInfo(){
     } else {
       document.getElementById('lb-category').value = m.category || '焼菓子';
       document.getElementById('lb-storage').value = '高温多湿、直射日光を避けてください。';
-      // 原材料を自動生成
       const autoIngredients = generateIngredientsList(m);
       if(autoIngredients){
         document.getElementById('lb-ingredients').value = autoIngredients;
@@ -442,35 +543,27 @@ async function loadLabelInfo(){
   }
 }
 
-// ---- 原材料リスト自動生成 ----
 function expandIngredients(components, factor=1){
-  // 全材料を再帰的に展開して {name, grams} のリストにする
   const result = [];
   components.forEach(c=>{
     if(c.is_packaging) return;
     const master = masterData.find(x=>x.name===c.name);
     if(master && master.is_packaging) return;
-
     if(c.isRecipe){
-      // サブレシピを展開
       const r = recipes.find(x=>x.name===c.name);
       if(r && r.total_qty){
         const ings = Array.isArray(r.ingredients)?r.ingredients:[];
         const subFactor = (c.qty / r.total_qty) * factor;
-        // サブレシピの材料を展開
         ings.forEach(i=>{
-          // gに換算
           let grams = i.qty * subFactor;
           if(i.unit==='kg') grams *= 1000;
           result.push({name: i.name, grams});
         });
       } else {
-        // total_qty未設定の場合はそのまま
         let grams = c.qty * factor;
         result.push({name: c.name, grams});
       }
     } else {
-      // 通常材料
       let grams = c.qty * factor;
       if(c.unit==='kg') grams *= 1000;
       result.push({name: c.name, grams});
@@ -487,27 +580,14 @@ function getGroupName(ingredientName){
 function generateIngredientsList(menu){
   if(!menu) return '';
   const comps = Array.isArray(menu.components)?menu.components:[];
-
-  // 全材料を展開
   const allIngs = expandIngredients(comps);
-
-  // グループ名に変換してから合算
   const ingMap = {};
   allIngs.forEach(i=>{
     if(!i.name) return;
     const groupName = getGroupName(i.name);
-    if(ingMap[groupName]){
-      ingMap[groupName] += i.grams;
-    } else {
-      ingMap[groupName] = i.grams;
-    }
+    if(ingMap[groupName]){ ingMap[groupName] += i.grams; } else { ingMap[groupName] = i.grams; }
   });
-
-  // 重量順に並べ替え
-  const sorted = Object.entries(ingMap)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([name])=>name);
-
+  const sorted = Object.entries(ingMap).sort((a,b)=>b[1]-a[1]).map(([name])=>name);
   if(!sorted.length) return '';
   return sorted.join('、');
 }
@@ -523,6 +603,7 @@ async function saveLabelInfo(){
     storage: document.getElementById('lb-storage').value,
     manufacturer: labelSettings.manufacturer,
     address: labelSettings.address,
+    store_id: currentStoreId,
   };
   const existing = labelInfoCache[menuId];
   if(existing){
@@ -539,7 +620,6 @@ function previewLabel(){
   if(!menuId){alert('商品を選択してください');return;}
   const m = menus.find(x=>x.id==menuId);
   if(!m){return;}
-
   const category = document.getElementById('lb-category').value;
   const ingredients = document.getElementById('lb-ingredients').value;
   const content = document.getElementById('lb-content').value;
@@ -547,15 +627,11 @@ function previewLabel(){
   const expiry = document.getElementById('lb-expiry').value;
   const manufacturer = labelSettings.manufacturer || document.getElementById('lb-manufacturer').value;
   const address = labelSettings.address || document.getElementById('lb-address').value;
-
-  // 賞味期限フォーマット
   let expiryStr = '';
   if(expiry){
     const d = new Date(expiry);
     expiryStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
   }
-
-  // 栄養成分を計算
   const comps = Array.isArray(m.components)?m.components:[];
   let total = {kcal:0,protein:0,fat:0,carbs:0,salt:0};
   comps.forEach(c=>{
@@ -576,15 +652,11 @@ function previewLabel(){
       if(n){total.kcal+=n.kcal;total.protein+=n.protein;total.fat+=n.fat;total.carbs+=n.carbs;total.salt+=n.salt;}
     }
   });
-
   const hasNutrition = total.kcal>0||total.protein>0||total.fat>0;
-
-  // アレルゲンを自動集計
   const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ','カシューナッツ'];
   const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','もも','やまいも','りんご','ゼラチン','ごま','アーモンド','マカダミアナッツ','ピスタチオ'];
   const showRecommended = document.getElementById('lb-show-recommended-allergens')?.checked;
   const collectedAllergens = new Set();
-
   const collectFromIngredient = (name) => {
     const master = masterData.find(x=>x.name===name);
     if(master && Array.isArray(master.allergens)){
@@ -594,21 +666,15 @@ function previewLabel(){
       });
     }
   };
-
   comps.forEach(c=>{
     if(c.isRecipe){
       const r=recipes.find(x=>x.name===c.name);
       if(r) (Array.isArray(r.ingredients)?r.ingredients:[]).forEach(i=>collectFromIngredient(i.name));
-    } else {
-      collectFromIngredient(c.name);
-    }
+    } else { collectFromIngredient(c.name); }
   });
-
   const allergenOrder = [...ALLERGENS_REQUIRED, ...ALLERGENS_RECOMMENDED];
   const sortedAllergens = allergenOrder.filter(a=>collectedAllergens.has(a));
-  const allergenText = sortedAllergens.length > 0
-    ? `（一部に${sortedAllergens.join('・')}を含む）`
-    : '';
+  const allergenText = sortedAllergens.length > 0 ? `（一部に${sortedAllergens.join('・')}を含む）` : '';
 
   document.getElementById('label-modal-body').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -616,7 +682,6 @@ function previewLabel(){
       <button class="btn btn-primary btn-sm" type="button" onclick="printLabel()">🖨 印刷</button>
     </div>
     <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">実際の印刷サイズ：39mm × 48mm</p>
-
     <div style="display:flex;justify-content:center;margin-bottom:14px;">
       <div id="label-preview-box" style="width:195px;height:240px;border:1px solid #333;padding:3px;font-size:6px;line-height:1.3;background:#fff;font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;box-sizing:border-box;overflow:hidden;">
         <table style="width:100%;border-collapse:collapse;font-size:6px;table-layout:fixed;">
@@ -665,8 +730,6 @@ function printLabel(){
       table.main { width: 100%; border-collapse: collapse; font-size: 4.5pt; line-height: 1.25; table-layout: fixed; }
       table.main td { border: 0.3pt solid #333; padding: 0.8pt 1.5pt; vertical-align: top; word-break: break-all; }
       table.main td:first-child { width: 30%; white-space: nowrap; }
-      table.nutrition { width: 100%; border-collapse: collapse; font-size: 4pt; }
-      table.nutrition td { border: 0.3pt solid #333; padding: 0.5pt 1pt; text-align: center; }
     </style>
     </head><body><div style="width:100%;height:100%;display:flex;flex-direction:column;">${labelBox.innerHTML}</div></body></html>`);
   win.document.close();
@@ -684,8 +747,6 @@ function closeLabelModal(e){
     document.getElementById('label-modal').style.display='none';
 }
 
-
-// ---- グループ管理 ----
 function openGroupManager(){
   renderGroupManagerModal();
   document.getElementById('modal').style.display='flex';
@@ -697,7 +758,6 @@ function renderGroupManagerModal(){
     if(!grouped[g.group_name]) grouped[g.group_name]=[];
     grouped[g.group_name].push(g);
   });
-
   document.getElementById('modal-body').innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <p style="font-size:17px;font-weight:600;">グループ設定</p>
@@ -722,10 +782,8 @@ function renderGroupManagerModal(){
 }
 
 function openAddGroup(){
-  // 食材マスターから未グループの食材を候補として表示
   const grouped = ingredientGroups.map(g=>g.ingredient_name);
   const candidates = masterData.filter(m=>!grouped.includes(m.name)).map(m=>m.name);
-
   document.getElementById('modal-body').innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
       <button class="btn btn-sm" type="button" onclick="renderGroupManagerModal()">← 戻る</button>
@@ -734,16 +792,12 @@ function openAddGroup(){
     <div class="form-row">
       <span class="form-label">食材名</span>
       <input type="text" id="gi-name" list="gi-candidates" placeholder="例：特宝笠 小麦粉" style="flex:1;"/>
-      <datalist id="gi-candidates">
-        ${candidates.map(c=>`<option value="${c}">`).join('')}
-      </datalist>
+      <datalist id="gi-candidates">${candidates.map(c=>`<option value="${c}">`).join('')}</datalist>
     </div>
     <div class="form-row">
       <span class="form-label">グループ名</span>
       <input type="text" id="gi-group" list="gi-groups" placeholder="例：小麦粉" style="flex:1;"/>
-      <datalist id="gi-groups">
-        ${[...new Set(ingredientGroups.map(g=>g.group_name))].map(g=>`<option value="${g}">`).join('')}
-      </datalist>
+      <datalist id="gi-groups">${[...new Set(ingredientGroups.map(g=>g.group_name))].map(g=>`<option value="${g}">`).join('')}</datalist>
     </div>
     <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">グループ名は既存のものを選ぶか、新しい名前を入力してください。</p>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -759,7 +813,7 @@ async function saveGroup(){
   if(!ingredient_name){alert('食材名を入力してください');return;}
   if(!group_name){alert('グループ名を入力してください');return;}
   setSyncing();
-  const res = await sb.from('ingredient_groups').insert({ingredient_name, group_name});
+  const res = await sb.from('ingredient_groups').insert({ingredient_name, group_name, store_id: currentStoreId});
   if(res.error){setError('保存失敗');return;}
   await loadAll();
   setSynced();
@@ -775,14 +829,14 @@ async function deleteGroup(id){
   renderGroupManagerModal();
 }
 
-// ---- データ読み込み ----
 async function loadAll(){
+  if(!currentStoreId) return;
   try{
     const [mRes, rRes, miRes, igRes] = await Promise.all([
-      sb.from('menus').select('*').order('name'),
-      sb.from('recipes').select('*').order('name'),
-      sb.from('master_ingredients').select('*').order('name'),
-      sb.from('ingredient_groups').select('*').order('group_name')
+      sb.from('menus').select('*').eq('store_id', currentStoreId).order('name'),
+      sb.from('recipes').select('*').eq('store_id', currentStoreId).order('name'),
+      sb.from('master_ingredients').select('*').eq('store_id', currentStoreId).order('name'),
+      sb.from('ingredient_groups').select('*').eq('store_id', currentStoreId).order('group_name')
     ]);
     if(mRes.error) throw mRes.error;
     if(rRes.error) throw rRes.error;
@@ -798,7 +852,6 @@ async function loadAll(){
   } catch(e){ setError('接続エラー'); console.error(e); }
 }
 
-// ---- タブ切替 ----
 function sw(t){
   ['menu','recipe','master','import','label'].forEach((s,i)=>{
     document.querySelectorAll('.tab')[i].classList.toggle('active',s===t);
@@ -808,7 +861,6 @@ function sw(t){
   if(t==='label') initLabelTab();
 }
 
-// ---- メニュー一覧 ----
 function rateClass(r){ return r!=null?(r<=35?'b-ok':r<=45?'b-warn':'b-bad'):'b-none'; }
 function rateText(r){ return r!=null?r.toFixed(1)+'%':'売価未設定'; }
 
@@ -822,7 +874,7 @@ function renderMenuList(){
     <div class="list-item" onclick="openMenuDetail(${m.id})">
       <div style="flex:1;">
         <div class="item-name">${m.name}</div>
-        <div class="item-meta">原価 ${m.total?m.total.toFixed(0)+'円':'—'}　売価 ${m.price?m.price+'円':'未設定'}</div>
+        <div style="font-size:11px;color:var(--text3);">原価 ${m.total?m.total.toFixed(0)+'円':'—'}　売価 ${m.price?m.price+'円':'未設定'}</div>
       </div>
       <span class="badge ${rateClass(m.rate)}">${rateText(m.rate)}</span>
       <span style="color:var(--text3);font-size:16px;">›</span>
@@ -905,7 +957,6 @@ async function delMenu(id){
   closeModal();
 }
 
-// ---- レシピ一覧 ----
 function renderList(){
   const q=(document.getElementById('search').value||'').toLowerCase();
   const el=document.getElementById('rlist');
@@ -916,28 +967,22 @@ function renderList(){
     <div class="list-item" onclick="openRecipeDetail(${r.id})">
       <div style="flex:1;">
         <div class="item-name">${r.name}</div>
-        <div class="item-meta">原価 ${r.total?r.total.toFixed(0)+'円':'—'}</div>
+        <div style="font-size:11px;color:var(--text3);">原価 ${r.total?r.total.toFixed(0)+'円':'—'}</div>
       </div>
       <span style="color:var(--text3);font-size:16px;">›</span>
     </div>`).join('');
 }
 
-
-// サブレシピにジャンプ
 function jumpToRecipe(name){
   const r = recipes.find(x=>x.name===name);
-  if(r){
-    openRecipeDetail(r.id);
-  } else {
-    alert('レシピ「'+name+'」が見つかりません。レシピCSVを取込んでください。');
-  }
+  if(r){ openRecipeDetail(r.id); }
+  else { alert('レシピ「'+name+'」が見つかりません。'); }
 }
 
 function openRecipeDetail(id){
   const r=recipes.find(x=>x.id===id);
   if(!r) return;
   const ings=Array.isArray(r.ingredients)?r.ingredients:[];
-  const totalQty=r.total_qty||ings.reduce((s,i)=>s+(i.unit===ings[0]?.unit?i.qty:0),0)||0;
   const unitPrice=r.total_qty&&r.total?r.total/r.total_qty:null;
   document.getElementById('modal-body').innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
@@ -982,7 +1027,6 @@ function openRecipeDetail(id){
     })()}
     <hr class="divider"/>
     <p style="font-size:13px;font-weight:600;margin-bottom:10px;">総量を設定（正しい単価計算に必要）</p>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:8px;">例：シャンティのレシピが全材料で1,120g作れる場合 → 総量: 1120g</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <input type="number" id="rq" placeholder="例：1120" value="${r.total_qty||''}" style="width:110px;"/>
       <select id="ru" style="width:75px;">
@@ -999,7 +1043,6 @@ async function updateRecipeTotalQty(id){
   if(!total_qty){alert('総量を入力してください');return;}
   const r=recipes.find(x=>x.id===id);
   if(!r) return;
-  // unit = 総量あたりの原価 → 1単位あたりの単価
   const unit = r.total ? r.total/total_qty : 0;
   setSyncing();
   await sb.from('recipes').update({total_qty,total_unit,unit}).eq('id',id);
@@ -1016,7 +1059,6 @@ async function delRecipe(id){
   closeModal();
 }
 
-// ---- 食材マスター表示・編集 ----
 function renderMasterTable(){
   const q=(document.getElementById('master-search').value||'').toLowerCase();
   const el=document.getElementById('master-list');
@@ -1040,7 +1082,6 @@ function renderMasterTable(){
     </div>`).join('');
 }
 
-
 function fillGroupDatalist(){
   const dl = document.getElementById('mf-group-list');
   if(!dl) return;
@@ -1050,9 +1091,7 @@ function fillGroupDatalist(){
 
 function openAddMaster(){
   document.getElementById('modal-body').innerHTML=`
-    <div style="margin-bottom:14px;">
-      <p style="font-size:17px;font-weight:600;">食材を追加</p>
-    </div>
+    <div style="margin-bottom:14px;"><p style="font-size:17px;font-weight:600;">食材を追加</p></div>
     ${masterFormHTML()}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
       <button class="btn" type="button" onclick="closeModal()">キャンセル</button>
@@ -1065,29 +1104,16 @@ function openAddMaster(){
 function openEditMaster(id){
   const m=masterData.find(x=>x.id===id);
   if(!m) return;
-
-  // この食材を使っているレシピを検索
-  const affectedRecipes = recipes.filter(r=>
-    Array.isArray(r.ingredients) && r.ingredients.some(i=>i.name===m.name)
-  );
-
-  // この食材・影響レシピを使っているメニューを検索
+  const affectedRecipes = recipes.filter(r=>Array.isArray(r.ingredients) && r.ingredients.some(i=>i.name===m.name));
   const affectedMenus = menus.map(menu=>{
     const comps = Array.isArray(menu.components)?menu.components:[];
-    let usedQty = 0; // g換算
     let costImpact = 0;
-
     comps.forEach(c=>{
       if(!c.isRecipe && c.name===m.name){
-        // メニューが直接この食材を使用
-        let qty = c.qty;
-        if(c.unit==='kg') qty*=1000;
-        usedQty += qty;
         const up = m.qty ? m.price/m.qty : 0;
         costImpact += up * c.qty;
       }
       if(c.isRecipe){
-        // レシピ経由で使用しているか
         const r = recipes.find(x=>x.name===c.name);
         if(!r) return;
         const ing = Array.isArray(r.ingredients) && r.ingredients.find(i=>i.name===m.name);
@@ -1096,18 +1122,12 @@ function openEditMaster(id){
         let factor = c.qty/rqty;
         if(r.total_unit==='kg'&&c.unit==='g') factor=c.qty/1000/rqty;
         else if(r.total_unit==='g'&&c.unit==='kg') factor=c.qty*1000/rqty;
-        let ingQty = ing.qty;
-        if(ing.unit==='kg') ingQty*=1000;
-        usedQty += ingQty * factor;
         const up = m.qty ? m.price/m.qty : 0;
         costImpact += up * ing.qty * factor;
       }
     });
-
     return costImpact > 0 ? {menu, costImpact} : null;
   }).filter(Boolean);
-
-  // 影響セクションのHTML
   const impactHTML = (affectedMenus.length || affectedRecipes.length) ? `
     <div style="margin:14px 0 0;padding:12px;background:var(--bg2);border-radius:var(--radius-sm);">
       <p style="font-size:13px;font-weight:600;margin-bottom:8px;">📊 この食材の使用状況</p>
@@ -1130,8 +1150,7 @@ function openEditMaster(id){
         <p style="font-size:11px;color:var(--text2);margin-bottom:4px;">💡 値上がりシミュレーション</p>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span style="font-size:12px;">仮の単価：</span>
-          <input type="number" id="sim-price" placeholder="新しい価格（円）" style="width:130px;font-size:13px;padding:4px 8px;flex:none;"
-            oninput="runPriceSimulation(${id})"/>
+          <input type="number" id="sim-price" placeholder="新しい価格（円）" style="width:130px;font-size:13px;padding:4px 8px;flex:none;" oninput="runPriceSimulation(${id})"/>
           <span style="font-size:12px;color:var(--text2);">円 / ${m.qty}${m.unit}</span>
         </div>
         <div id="sim-result" style="margin-top:6px;font-size:12px;color:var(--text2);"></div>
@@ -1140,11 +1159,8 @@ function openEditMaster(id){
     <div style="margin:14px 0 0;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
       <p style="font-size:12px;color:var(--text3);">📊 この食材はまだどのメニュー・レシピにも使用されていません</p>
     </div>`;
-
   document.getElementById('modal-body').innerHTML=`
-    <div style="margin-bottom:14px;">
-      <p style="font-size:17px;font-weight:600;">食材を編集</p>
-    </div>
+    <div style="margin-bottom:14px;"><p style="font-size:17px;font-weight:600;">食材を編集</p></div>
     ${masterFormHTML(m)}
     ${impactHTML}
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
@@ -1165,7 +1181,6 @@ function runPriceSimulation(masterId){
   const newUnitPrice = newPrice / m.qty;
   const currentUnitPrice = m.price / m.qty;
   const diff = newUnitPrice - currentUnitPrice;
-
   const results = menus.map(menu=>{
     const comps = Array.isArray(menu.components)?menu.components:[];
     let totalDiff = 0;
@@ -1186,7 +1201,6 @@ function runPriceSimulation(masterId){
     });
     return totalDiff!==0 ? {name:menu.name, diff:totalDiff} : null;
   }).filter(Boolean);
-
   const el = document.getElementById('sim-result');
   if(!results.length){ el.textContent='影響するメニューはありません'; return; }
   el.innerHTML = results.map(r=>
@@ -1201,7 +1215,6 @@ function masterFormHTML(m={}){
   const ALLERGENS_REQUIRED = ['小麦','乳','卵','えび','かに','落花生','そば','くるみ','カシューナッツ'];
   const ALLERGENS_RECOMMENDED = ['いか','あわび','いくら','オレンジ','キウイフルーツ','牛肉','さけ','さば','大豆','鶏肉','バナナ','豚肉','もも','やまいも','りんご','ゼラチン','ごま','アーモンド','マカダミアナッツ','ピスタチオ'];
   const allergens = m.allergens || [];
-
   return `
     <div style="margin-bottom:10px;">
       <button class="btn btn-sm" type="button" onclick="openPresetSearch()" style="width:100%;justify-content:center;">🔍 食品成分表からプリセットを選ぶ（栄養成分を自動入力）</button>
@@ -1226,10 +1239,9 @@ function masterFormHTML(m={}){
       <datalist id="mf-group-list"></datalist>
     </div>
     <p style="font-size:11px;color:var(--text2);margin:-6px 0 10px 86px;">ラベル印刷時に同じグループ名でまとめて表示されます</p>
-
     <div style="margin:10px 0 6px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
       <p style="font-size:12px;font-weight:600;margin-bottom:8px;">⚠️ アレルゲン</p>
-      <p style="font-size:11px;color:var(--text2);margin-bottom:6px;">義務表示（8品目）</p>
+      <p style="font-size:11px;color:var(--text2);margin-bottom:6px;">義務表示（9品目）</p>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
         ${ALLERGENS_REQUIRED.map(a=>`
           <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;background:#fff;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);">
@@ -1246,7 +1258,6 @@ function masterFormHTML(m={}){
           </label>`).join('')}
       </div>
     </div>
-
     <div style="margin:10px 0 6px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
         <input type="checkbox" id="mf-packaging" ${m.is_packaging?'checked':''} style="width:16px;height:16px;flex:none;"/>
@@ -1266,17 +1277,16 @@ function masterFormHTML(m={}){
     </div>`;
 }
 
-
 async function saveIngredientGroup(ingredientName){
   const groupName = document.getElementById('mf-group')?.value.trim();
-  if(!groupName) return; // 未入力の場合はスキップ
+  if(!groupName) return;
   const existing = ingredientGroups.find(g=>g.ingredient_name===ingredientName);
   if(existing){
     if(existing.group_name !== groupName){
       await sb.from('ingredient_groups').update({group_name:groupName}).eq('id',existing.id);
     }
   } else {
-    await sb.from('ingredient_groups').insert({ingredient_name:ingredientName, group_name:groupName});
+    await sb.from('ingredient_groups').insert({ingredient_name:ingredientName, group_name:groupName, store_id: currentStoreId});
   }
 }
 
@@ -1284,7 +1294,7 @@ async function saveMasterAdd(){
   const item=getMasterFormData();
   if(!item) return;
   setSyncing();
-  const res=await sb.from('master_ingredients').insert(item);
+  const res=await sb.from('master_ingredients').insert({...item, store_id: currentStoreId});
   if(res.error){setError('保存失敗');return;}
   await saveIngredientGroup(item.name);
   await loadAll();
@@ -1333,120 +1343,6 @@ async function deleteMaster(id){
   await loadAll();
 }
 
-// ---- 栄養成分計算 ----
-function getNutritionPer100g(ingredientName, unit){
-  const m = masterData.find(x=>x.name===ingredientName);
-  if(!m || m.is_packaging) return null;
-  if(m.kcal==null && m.protein==null) return null;
-  // 単位がg/ml系でない場合はスキップ
-  const weightUnits=['g','kg','ml','l'];
-  if(!weightUnits.includes(m.unit) && !weightUnits.includes(unit)) return null;
-  return {kcal:m.kcal||0, protein:m.protein||0, fat:m.fat||0, carbs:m.carbs||0, salt:m.salt||0};
-}
-
-function calcIngredientNutrition(ing){
-  // ingはレシピ材料またはメニュー構成要素
-  const n = getNutritionPer100g(ing.name, ing.unit);
-  if(!n) return null;
-  let qty = ing.qty;
-  // 単位変換（kgをgに、lをmlに）
-  if(ing.unit==='kg') qty = ing.qty * 1000;
-  if(ing.unit==='l') qty = ing.qty * 1000;
-  const factor = qty / 100;
-  return {
-    kcal: n.kcal * factor,
-    protein: n.protein * factor,
-    fat: n.fat * factor,
-    carbs: n.carbs * factor,
-    salt: n.salt * factor,
-  };
-}
-
-function calcMenuNutrition(menuId){
-  const m = menus.find(x=>x.id===menuId);
-  if(!m) return;
-  const comps = Array.isArray(m.components)?m.components:[];
-  let total = {kcal:0, protein:0, fat:0, carbs:0, salt:0};
-  let missingItems = [];
-
-  comps.forEach(c=>{
-    if(c.isRecipe){
-      // サブレシピの場合：レシピの材料を再帰的に計算
-      const r = recipes.find(x=>x.name===c.name);
-      if(r){
-        const ings = Array.isArray(r.ingredients)?r.ingredients:[];
-        let recipeTotal = {kcal:0, protein:0, fat:0, carbs:0, salt:0};
-        let recipeQty = r.total_qty||1;
-        ings.forEach(i=>{
-          const n = calcIngredientNutrition(i);
-          if(n){
-            recipeTotal.kcal += n.kcal;
-            recipeTotal.protein += n.protein;
-            recipeTotal.fat += n.fat;
-            recipeTotal.carbs += n.carbs;
-            recipeTotal.salt += n.salt;
-          }
-        });
-        // 使用量分だけ按分
-        const factor = c.qty / recipeQty;
-        total.kcal += recipeTotal.kcal * factor;
-        total.protein += recipeTotal.protein * factor;
-        total.fat += recipeTotal.fat * factor;
-        total.carbs += recipeTotal.carbs * factor;
-        total.salt += recipeTotal.salt * factor;
-      }
-    } else {
-      // 材料の場合
-      const master = masterData.find(x=>x.name===c.name);
-      if(master && master.is_packaging) return; // 包材はスキップ
-      const n = calcIngredientNutrition(c);
-      if(n){
-        total.kcal += n.kcal;
-        total.protein += n.protein;
-        total.fat += n.fat;
-        total.carbs += n.carbs;
-        total.salt += n.salt;
-      } else {
-        missingItems.push(c.name);
-      }
-    }
-  });
-
-  const el = document.getElementById(`nutrition-result-${menuId}`);
-  if(!el) return;
-
-  el.innerHTML = `
-    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;">
-      <p style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">栄養成分表示（1個あたり）</p>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 4px;color:var(--text2);">エネルギー</td>
-          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.kcal.toFixed(1)} kcal</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 4px;color:var(--text2);">タンパク質</td>
-          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.protein.toFixed(1)} g</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 4px;color:var(--text2);">脂質</td>
-          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.fat.toFixed(1)} g</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:5px 4px;color:var(--text2);">炭水化物</td>
-          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.carbs.toFixed(1)} g</td>
-        </tr>
-        <tr>
-          <td style="padding:5px 4px;color:var(--text2);">食塩相当量</td>
-          <td style="padding:5px 4px;text-align:right;font-weight:500;">${total.salt.toFixed(2)} g</td>
-        </tr>
-      </table>
-    </div>
-    ${missingItems.length>0?`<div class="warning-box">⚠️ 以下の食材は栄養成分が未登録のため計算から除外されています：<br><span style="font-size:11px;">${missingItems.join('、')}</span></div>`:''}
-  `;
-}
-
-
-// ---- 栄養成分計算 ----
 function getNutritionPer100g(ingredientName){
   const m = masterData.find(x=>x.name===ingredientName);
   if(!m || m.is_packaging) return null;
@@ -1514,27 +1410,24 @@ function closeModal(e){
     document.getElementById('modal').style.display='none';
 }
 
-// ========== プリセット検索（食品標準成分表）==========
-
 const PRESET_INGREDIENTS = [{"name": "こむぎ ［小麦粉］ 薄力粉 1等", "category": "穀類", "energy": 355, "protein": 8.3, "fat": 0.0, "carbs": 75.8, "salt": null}, {"name": "こむぎ ［小麦粉］ 薄力粉 2等", "category": "穀類", "energy": 351, "protein": 9.3, "fat": 0.0, "carbs": 74.3, "salt": null}, {"name": "こむぎ ［小麦粉］ 中力粉 1等", "category": "穀類", "energy": 343, "protein": 9.0, "fat": 0.0, "carbs": 75.1, "salt": null}, {"name": "こむぎ ［小麦粉］ 中力粉 2等", "category": "穀類", "energy": 350, "protein": 9.7, "fat": 0.0, "carbs": 74.0, "salt": null}, {"name": "こむぎ ［小麦粉］ 強力粉 1等", "category": "穀類", "energy": 342, "protein": 11.8, "fat": 0.0, "carbs": 71.7, "salt": null}, {"name": "こむぎ ［小麦粉］ 強力粉 2等", "category": "穀類", "energy": 348, "protein": 12.6, "fat": 0.0, "carbs": 70.6, "salt": null}, {"name": "こむぎ ［小麦粉］ 強力粉 全粒粉", "category": "穀類", "energy": 324, "protein": 12.8, "fat": 0.0, "carbs": 68.2, "salt": null}, {"name": "こめ ［うるち米製品］ 玄米粉", "category": "穀類", "energy": 376, "protein": 7.1, "fat": 0.0, "carbs": 84.1, "salt": null}, {"name": "こめ ［うるち米製品］ 米粉", "category": "穀類", "energy": 361, "protein": 6.0, "fat": 0.0, "carbs": 81.9, "salt": null}, {"name": "こめ ［うるち米製品］ 米粉パン 食パン", "category": "穀類", "energy": 249, "protein": 10.7, "fat": 0.0, "carbs": 41.6, "salt": null}, {"name": "こめ ［うるち米製品］ 米粉パン ロールパン", "category": "穀類", "energy": 258, "protein": 8.8, "fat": 18.0, "carbs": 42.0, "salt": null}, {"name": "こめ ［うるち米製品］ 米粉パン 小麦グルテン不使用のもの", "category": "穀類", "energy": 250, "protein": 3.4, "fat": null, "carbs": 51.3, "salt": null}, {"name": "こめ ［うるち米製品］ 米粉めん", "category": "穀類", "energy": 255, "protein": 3.6, "fat": 0.0, "carbs": 58.4, "salt": null}, {"name": "そば そば粉 全層粉", "category": "穀類", "energy": 344, "protein": 12.0, "fat": 0.0, "carbs": 69.6, "salt": null}, {"name": "そば そば粉 内層粉", "category": "穀類", "energy": 348, "protein": 6.0, "fat": 0.0, "carbs": 77.6, "salt": null}, {"name": "そば そば粉 中層粉", "category": "穀類", "energy": 339, "protein": 10.2, "fat": 0.0, "carbs": 71.6, "salt": null}, {"name": "そば そば粉 表層粉", "category": "穀類", "energy": 341, "protein": 15.0, "fat": 0.0, "carbs": 65.1, "salt": null}, {"name": "ライむぎ 全粒粉", "category": "穀類", "energy": 321, "protein": 12.7, "fat": 0.0, "carbs": 70.7, "salt": null}, {"name": "ライむぎ ライ麦粉", "category": "穀類", "energy": 327, "protein": 8.5, "fat": 0.0, "carbs": 75.8, "salt": null}, {"name": "＜いも類＞ （さつまいも類） さつまいも 塊根 皮つき 生", "category": "でん粉・いも類", "energy": 129, "protein": 0.9, "fat": 0.0, "carbs": 33.1, "salt": null}, {"name": "＜いも類＞ （さつまいも類） さつまいも 塊根 皮つき 天ぷら", "category": "でん粉・いも類", "energy": 207, "protein": 1.4, "fat": null, "carbs": 38.4, "salt": null}, {"name": "＜いも類＞ （さつまいも類） さつまいも 塊根 皮なし 生", "category": "でん粉・いも類", "energy": 128, "protein": 1.2, "fat": 0.0, "carbs": 31.9, "salt": null}, {"name": "＜いも類＞ （さつまいも類） むらさきいも 塊根 皮なし 生", "category": "でん粉・いも類", "energy": 125, "protein": 1.2, "fat": 0.0, "carbs": 31.7, "salt": null}, {"name": "＜いも類＞ じゃがいも 塊茎 皮つき 生", "category": "でん粉・いも類", "energy": 51, "protein": 1.8, "fat": 0.0, "carbs": 15.9, "salt": null}, {"name": "＜いも類＞ じゃがいも 塊茎 皮つき 電子レンジ調理", "category": "でん粉・いも類", "energy": 79, "protein": 2.1, "fat": 0.0, "carbs": 19.2, "salt": null}, {"name": "＜いも類＞ じゃがいも 塊茎 皮なし 生", "category": "でん粉・いも類", "energy": 59, "protein": 1.8, "fat": 0.0, "carbs": 17.3, "salt": null}, {"name": "＜いも類＞ じゃがいも 塊茎 皮なし 水煮", "category": "でん粉・いも類", "energy": 72, "protein": 1.7, "fat": 0.0, "carbs": 16.9, "salt": null}, {"name": "＜いも類＞ じゃがいも 塊茎 皮なし 電子レンジ調理", "category": "でん粉・いも類", "energy": 79, "protein": 1.9, "fat": 0.0, "carbs": 19.0, "salt": null}, {"name": "＜いも類＞ じゃがいも 乾燥マッシュポテト", "category": "でん粉・いも類", "energy": 351, "protein": 6.6, "fat": 0.0, "carbs": 82.8, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） おおうばゆりでん粉", "category": "でん粉・いも類", "energy": 334, "protein": 0.1, "fat": null, "carbs": 83.6, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） キャッサバでん粉", "category": "でん粉・いも類", "energy": 361, "protein": 0.1, "fat": 0.0, "carbs": 85.3, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） くずでん粉", "category": "でん粉・いも類", "energy": 363, "protein": 0.2, "fat": 0.0, "carbs": 85.6, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） 米でん粉", "category": "でん粉・いも類", "energy": 383, "protein": 0.2, "fat": 0.0, "carbs": 89.3, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） 小麦でん粉", "category": "でん粉・いも類", "energy": 367, "protein": 0.2, "fat": 0.0, "carbs": 86.0, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） サゴでん粉", "category": "でん粉・いも類", "energy": 364, "protein": 0.1, "fat": 0.0, "carbs": 86.1, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） さつまいもでん粉", "category": "でん粉・いも類", "energy": 347, "protein": 0.1, "fat": 0.0, "carbs": 82.0, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） じゃがいもでん粉", "category": "でん粉・いも類", "energy": 345, "protein": 0.1, "fat": 0.0, "carbs": 81.6, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉類） とうもろこしでん粉", "category": "でん粉・いも類", "energy": 370, "protein": 0.1, "fat": 0.0, "carbs": 86.3, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） くずきり 乾", "category": "でん粉・いも類", "energy": 347, "protein": 0.2, "fat": 0.0, "carbs": 87.7, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） ごま豆腐", "category": "でん粉・いも類", "energy": 75, "protein": 1.5, "fat": 0.0, "carbs": 9.1, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） タピオカパール 乾", "category": "でん粉・いも類", "energy": 357, "protein": 0.0, "fat": 0.0, "carbs": 87.8, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） でん粉めん 生", "category": "でん粉・いも類", "energy": 131, "protein": 0.1, "fat": 0.0, "carbs": 32.2, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） でん粉めん 乾", "category": "でん粉・いも類", "energy": 352, "protein": 0.2, "fat": 0.0, "carbs": 86.7, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） はるさめ 緑豆はるさめ 乾", "category": "でん粉・いも類", "energy": 350, "protein": 0.2, "fat": 0.0, "carbs": 87.5, "salt": null}, {"name": "＜でん粉・でん粉製品＞ （でん粉製品） はるさめ 普通はるさめ 乾", "category": "でん粉・いも類", "energy": 351, "protein": 0.0, "fat": 0.0, "carbs": 86.6, "salt": null}, {"name": "（砂糖類） 黒砂糖", "category": "砂糖・甘味料", "energy": 359, "protein": 1.7, "fat": 0.0, "carbs": 90.3, "salt": null}, {"name": "（砂糖類） てんさい含蜜糖", "category": "砂糖・甘味料", "energy": 363, "protein": 0.9, "fat": null, "carbs": 96.9, "salt": null}, {"name": "（砂糖類） 和三盆糖", "category": "砂糖・甘味料", "energy": 400, "protein": 0.2, "fat": 0.0, "carbs": 99.0, "salt": null}, {"name": "（砂糖類） 車糖 上白糖", "category": "砂糖・甘味料", "energy": 398, "protein": 0.0, "fat": 0.0, "carbs": 99.3, "salt": null}, {"name": "（砂糖類） 車糖 三温糖", "category": "砂糖・甘味料", "energy": 397, "protein": 0.0, "fat": 0.0, "carbs": 99.0, "salt": null}, {"name": "（砂糖類） ざらめ糖 グラニュー糖", "category": "砂糖・甘味料", "energy": 401, "protein": 0.0, "fat": 0.0, "carbs": 100.0, "salt": null}, {"name": "（砂糖類） ざらめ糖 白ざら糖", "category": "砂糖・甘味料", "energy": 401, "protein": 0.0, "fat": 0.0, "carbs": 100.0, "salt": null}, {"name": "（砂糖類） ざらめ糖 中ざら糖", "category": "砂糖・甘味料", "energy": 401, "protein": 0.0, "fat": 0.0, "carbs": 100.0, "salt": null}, {"name": "（砂糖類） 加工糖 角砂糖", "category": "砂糖・甘味料", "energy": 401, "protein": 0.0, "fat": 0.0, "carbs": 100.0, "salt": null}, {"name": "（砂糖類） 加工糖 氷砂糖", "category": "砂糖・甘味料", "energy": 401, "protein": 0.0, "fat": 0.0, "carbs": 100.0, "salt": null}, {"name": "（砂糖類） 加工糖 コーヒーシュガー", "category": "砂糖・甘味料", "energy": 402, "protein": 0.1, "fat": 0.0, "carbs": 99.8, "salt": null}, {"name": "（砂糖類） 加工糖 粉糖", "category": "砂糖・甘味料", "energy": 400, "protein": 0.0, "fat": 0.0, "carbs": 99.7, "salt": null}, {"name": "（砂糖類） 液糖 しょ糖型液糖", "category": "砂糖・甘味料", "energy": 273, "protein": 0.0, "fat": 0.0, "carbs": 67.9, "salt": null}, {"name": "（砂糖類） 液糖 転化型液糖", "category": "砂糖・甘味料", "energy": 300, "protein": 0.0, "fat": 0.0, "carbs": 76.6, "salt": null}, {"name": "（砂糖類） 氷糖みつ", "category": "砂糖・甘味料", "energy": 278, "protein": 0.2, "fat": 0.0, "carbs": 68.2, "salt": null}, {"name": "（でん粉糖類） 還元麦芽糖", "category": "砂糖・甘味料", "energy": 209, "protein": 0.0, "fat": null, "carbs": 100.0, "salt": null}, {"name": "（でん粉糖類） 還元水あめ", "category": "砂糖・甘味料", "energy": 211, "protein": 0.0, "fat": null, "carbs": 69.9, "salt": null}, {"name": "（でん粉糖類） 粉あめ", "category": "砂糖・甘味料", "energy": 405, "protein": 0.0, "fat": 0.0, "carbs": 97.0, "salt": null}, {"name": "（でん粉糖類） 水あめ 酵素糖化", "category": "砂糖・甘味料", "energy": 349, "protein": 0.0, "fat": 0.0, "carbs": 85.0, "salt": null}, {"name": "（でん粉糖類） 水あめ 酸糖化", "category": "砂糖・甘味料", "energy": 348, "protein": 0.0, "fat": 0.0, "carbs": 85.0, "salt": null}, {"name": "（でん粉糖類） ぶどう糖 全糖", "category": "砂糖・甘味料", "energy": 349, "protein": 0.0, "fat": 0.0, "carbs": 91.0, "salt": null}, {"name": "（でん粉糖類） ぶどう糖 含水結晶", "category": "砂糖・甘味料", "energy": 349, "protein": 0.0, "fat": 0.0, "carbs": 91.3, "salt": null}, {"name": "（でん粉糖類） ぶどう糖 無水結晶", "category": "砂糖・甘味料", "energy": 381, "protein": 0.0, "fat": 0.0, "carbs": 99.7, "salt": null}, {"name": "（でん粉糖類） 果糖", "category": "砂糖・甘味料", "energy": 382, "protein": 0.0, "fat": 0.0, "carbs": 99.9, "salt": null}, {"name": "（でん粉糖類） 異性化液糖 ぶどう糖果糖液糖", "category": "砂糖・甘味料", "energy": 289, "protein": 0.0, "fat": 0.0, "carbs": 75.0, "salt": null}, {"name": "（でん粉糖類） 異性化液糖 果糖ぶどう糖液糖", "category": "砂糖・甘味料", "energy": 289, "protein": 0.0, "fat": 0.0, "carbs": 75.0, "salt": null}, {"name": "（でん粉糖類） 異性化液糖 高果糖液糖", "category": "砂糖・甘味料", "energy": 288, "protein": 0.0, "fat": 0.0, "carbs": 75.0, "salt": null}, {"name": "（その他） はちみつ", "category": "砂糖・甘味料", "energy": 334, "protein": 0.3, "fat": 0.0, "carbs": 81.9, "salt": null}, {"name": "（その他） メープルシロップ", "category": "砂糖・甘味料", "energy": 270, "protein": 0.1, "fat": 0.0, "carbs": 66.3, "salt": null}, {"name": "あずき 全粒 乾", "category": "豆類", "energy": 306, "protein": 20.8, "fat": 0.0, "carbs": 59.6, "salt": null}, {"name": "あずき あん こし生あん", "category": "豆類", "energy": 149, "protein": 9.8, "fat": 0.0, "carbs": 27.1, "salt": null}, {"name": "あずき あん さらしあん （乾燥あん）", "category": "豆類", "energy": 338, "protein": 23.5, "fat": 0.0, "carbs": 66.8, "salt": null}, {"name": "あずき あん こし練りあん （並あん）", "category": "豆類", "energy": 259, "protein": 5.6, "fat": 0.0, "carbs": 58.8, "salt": null}, {"name": "あずき あん こし練りあん （中割りあん）", "category": "豆類", "energy": 266, "protein": 5.1, "fat": 0.0, "carbs": 61.1, "salt": null}, {"name": "あずき あん こし練りあん （もなかあん）", "category": "豆類", "energy": 297, "protein": 5.1, "fat": 0.0, "carbs": 68.6, "salt": null}, {"name": "あずき あん つぶし練りあん", "category": "豆類", "energy": 242, "protein": 5.6, "fat": 0.0, "carbs": 54.0, "salt": null}, {"name": "えんどう 塩豆", "category": "豆類", "energy": 324, "protein": 23.3, "fat": 0.0, "carbs": 61.5, "salt": null}, {"name": "だいず ［全粒・全粒製品］ きな粉（砂糖入り） 青きな粉", "category": "豆類", "energy": 395, "protein": 18.5, "fat": 0.0, "carbs": 64.3, "salt": null}, {"name": "だいず ［全粒・全粒製品］ きな粉（砂糖入り） きな粉", "category": "豆類", "energy": 409, "protein": 18.3, "fat": 0.0, "carbs": 63.9, "salt": null}, {"name": "だいず ［その他］ 豆乳 豆乳飲料・麦芽コーヒー", "category": "豆類", "energy": 59, "protein": 2.2, "fat": 0.0, "carbs": 7.8, "salt": null}, {"name": "だいず ［その他］ 大豆たんぱく 分離大豆たんぱく 塩分無調整タイプ", "category": "豆類", "energy": 340, "protein": 79.1, "fat": 0.0, "carbs": 7.5, "salt": null}, {"name": "だいず ［その他］ 大豆たんぱく 分離大豆たんぱく 塩分調整タイプ", "category": "豆類", "energy": 340, "protein": 79.1, "fat": 0.0, "carbs": 7.5, "salt": null}, {"name": "つるあずき 全粒 乾", "category": "豆類", "energy": 299, "protein": 20.8, "fat": 0.0, "carbs": 61.8, "salt": null}, {"name": "アーモンド 乾", "category": "種実類", "energy": 601, "protein": 19.6, "fat": null, "carbs": 20.9, "salt": null}, {"name": "アーモンド フライ 味付け", "category": "種実類", "energy": 618, "protein": 21.3, "fat": 0.0, "carbs": 17.9, "salt": null}, {"name": "アーモンド いり 無塩", "category": "種実類", "energy": 601, "protein": 20.3, "fat": null, "carbs": 20.7, "salt": null}, {"name": "えごま 乾", "category": "種実類", "energy": 517, "protein": 17.7, "fat": 0.0, "carbs": 29.4, "salt": null}, {"name": "カシューナッツ フライ 味付け", "category": "種実類", "energy": 586, "protein": 19.8, "fat": 0.0, "carbs": 26.7, "salt": null}, {"name": "かぼちゃ いり 味付け", "category": "種実類", "energy": 584, "protein": 26.5, "fat": 0.0, "carbs": 12.0, "salt": null}, {"name": "（くり類） 日本ぐり 生", "category": "種実類", "energy": 149, "protein": 2.8, "fat": 0.0, "carbs": 36.9, "salt": null}, {"name": "（くり類） 日本ぐり 甘露煮", "category": "種実類", "energy": 235, "protein": 1.8, "fat": 0.0, "carbs": 56.8, "salt": null}, {"name": "（くり類） 中国ぐり 甘ぐり", "category": "種実類", "energy": 209, "protein": 4.9, "fat": 0.0, "carbs": 48.5, "salt": null}, {"name": "くるみ いり", "category": "種実類", "energy": 703, "protein": 14.6, "fat": 0.0, "carbs": 11.7, "salt": null}, {"name": "ごま 乾", "category": "種実類", "energy": 596, "protein": 19.8, "fat": 0.0, "carbs": 16.5, "salt": null}, {"name": "ごま いり", "category": "種実類", "energy": 597, "protein": 20.3, "fat": 0.0, "carbs": 18.5, "salt": null}, {"name": "ごま むき", "category": "種実類", "energy": 564, "protein": 19.3, "fat": 0.0, "carbs": 18.8, "salt": null}, {"name": "ごま ねり", "category": "種実類", "energy": 637, "protein": 19.0, "fat": 0.0, "carbs": 15.6, "salt": null}, {"name": "ピスタチオ いり 味付け", "category": "種実類", "energy": 609, "protein": 17.4, "fat": 0.0, "carbs": 20.9, "salt": null}, {"name": "ヘーゼルナッツ フライ 味付け", "category": "種実類", "energy": 690, "protein": 13.6, "fat": 0.0, "carbs": 13.9, "salt": null}, {"name": "マカダミアナッツ いり 味付け", "category": "種実類", "energy": 739, "protein": 8.3, "fat": 0.0, "carbs": 12.2, "salt": null}, {"name": "らっかせい バターピーナッツ", "category": "種実類", "energy": 603, "protein": 23.3, "fat": 0.0, "carbs": 18.3, "salt": null}, {"name": "らっかせい ピーナッツバター", "category": "種実類", "energy": 594, "protein": 20.6, "fat": 0.0, "carbs": 24.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 生乳 ジャージー種", "category": "乳類", "energy": 77, "protein": 3.9, "fat": 17.0, "carbs": 4.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 生乳 ホルスタイン種", "category": "乳類", "energy": 63, "protein": 3.2, "fat": 12.0, "carbs": 4.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 普通牛乳", "category": "乳類", "energy": 61, "protein": 3.3, "fat": 12.0, "carbs": 4.8, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 脱脂乳", "category": "乳類", "energy": 32, "protein": 3.4, "fat": 3.0, "carbs": 4.8, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 加工乳 濃厚", "category": "乳類", "energy": 70, "protein": 3.4, "fat": 16.0, "carbs": 5.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 加工乳 低脂肪", "category": "乳類", "energy": 43, "protein": 3.8, "fat": 6.0, "carbs": 5.5, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 乳児用液体ミルク", "category": "乳類", "energy": 66, "protein": 1.5, "fat": 11.0, "carbs": 7.1, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 乳飲料 コーヒー", "category": "乳類", "energy": 56, "protein": 2.2, "fat": 8.0, "carbs": 7.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （液状乳類） 乳飲料 フルーツ", "category": "乳類", "energy": 47, "protein": 1.2, "fat": 2.0, "carbs": 9.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （粉乳類） 全粉乳", "category": "乳類", "energy": 490, "protein": 25.5, "fat": 93.0, "carbs": 39.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （粉乳類） 脱脂粉乳", "category": "乳類", "energy": 359, "protein": 34.0, "fat": 25.0, "carbs": 53.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （粉乳類） 乳児用調製粉乳", "category": "乳類", "energy": 510, "protein": 12.4, "fat": 63.0, "carbs": 55.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （練乳類） 無糖練乳", "category": "乳類", "energy": 135, "protein": 6.8, "fat": 27.0, "carbs": 11.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （練乳類） 加糖練乳", "category": "乳類", "energy": 318, "protein": 7.7, "fat": 19.0, "carbs": 56.0, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） クリーム 乳脂肪", "category": "乳類", "energy": 398, "protein": 1.9, "fat": 64.0, "carbs": 6.5, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） クリーム 乳脂肪・植物性脂肪", "category": "乳類", "energy": 382, "protein": 4.4, "fat": 63.0, "carbs": 3.0, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） クリーム 植物性脂肪", "category": "乳類", "energy": 348, "protein": 1.3, "fat": 21.0, "carbs": 3.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） ホイップクリーム 乳脂肪", "category": "乳類", "energy": 404, "protein": 1.8, "fat": 110.0, "carbs": 12.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） ホイップクリーム 乳脂肪・植物性脂肪", "category": "乳類", "energy": 390, "protein": 4.0, "fat": 57.0, "carbs": 12.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） ホイップクリーム 植物性脂肪", "category": "乳類", "energy": 395, "protein": 6.3, "fat": 5.0, "carbs": 12.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） コーヒーホワイトナー 液状 乳脂肪", "category": "乳類", "energy": 203, "protein": 5.2, "fat": 50.0, "carbs": 5.5, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） コーヒーホワイトナー 液状 乳脂肪・植物性脂肪", "category": "乳類", "energy": 224, "protein": 4.8, "fat": 27.0, "carbs": 3.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） コーヒーホワイトナー 液状 植物性脂肪", "category": "乳類", "energy": 240, "protein": 4.3, "fat": 3.0, "carbs": 1.8, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） コーヒーホワイトナー 粉末状 乳脂肪", "category": "乳類", "energy": 504, "protein": 7.6, "fat": 86.0, "carbs": 60.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （クリーム類） コーヒーホワイトナー 粉末状 植物性脂肪", "category": "乳類", "energy": 540, "protein": 2.1, "fat": 1.0, "carbs": 56.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） ヨーグルト 全脂無糖", "category": "乳類", "energy": 56, "protein": 3.6, "fat": 12.0, "carbs": 4.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） ヨーグルト 低脂肪無糖", "category": "乳類", "energy": 40, "protein": 3.7, "fat": 5.0, "carbs": 5.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） ヨーグルト 無脂肪無糖", "category": "乳類", "energy": 38, "protein": 4.0, "fat": 4.0, "carbs": 5.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） ヨーグルト 脱脂加糖", "category": "乳類", "energy": 66, "protein": 4.3, "fat": 4.0, "carbs": 11.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） ヨーグルト ドリンクタイプ 加糖", "category": "乳類", "energy": 65, "protein": 2.9, "fat": 3.0, "carbs": 12.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） 乳酸菌飲料 乳製品", "category": "乳類", "energy": 65, "protein": 1.1, "fat": 1.0, "carbs": 16.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） 乳酸菌飲料 殺菌乳製品", "category": "乳類", "energy": 220, "protein": 1.5, "fat": 2.0, "carbs": 52.6, "salt": null}, {"name": "＜牛乳及び乳製品＞ （発酵乳・乳酸菌飲料） 乳酸菌飲料 非乳製品", "category": "乳類", "energy": 40, "protein": 0.4, "fat": 1.0, "carbs": 10.0, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ エダム", "category": "乳類", "energy": 320, "protein": 28.9, "fat": 65.0, "carbs": 1.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ エメンタール", "category": "乳類", "energy": 395, "protein": 27.3, "fat": 85.0, "carbs": 1.6, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ カテージ", "category": "乳類", "energy": 99, "protein": 13.3, "fat": 20.0, "carbs": 1.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ カマンベール", "category": "乳類", "energy": 289, "protein": 19.1, "fat": 87.0, "carbs": 0.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ クリーム", "category": "乳類", "energy": 309, "protein": 8.2, "fat": 99.0, "carbs": 2.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ ゴーダ", "category": "乳類", "energy": 353, "protein": 25.8, "fat": 83.0, "carbs": 1.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ チェダー", "category": "乳類", "energy": 387, "protein": 25.7, "fat": 100.0, "carbs": 1.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ パルメザン", "category": "乳類", "energy": 444, "protein": 44.0, "fat": 96.0, "carbs": 1.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ ブルー", "category": "乳類", "energy": 323, "protein": 18.8, "fat": 90.0, "carbs": 1.0, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ マスカルポーネ", "category": "乳類", "energy": 270, "protein": 4.4, "fat": 83.0, "carbs": 4.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ モッツァレラ", "category": "乳類", "energy": 267, "protein": 18.4, "fat": 62.0, "carbs": 4.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ やぎ", "category": "乳類", "energy": 278, "protein": 20.6, "fat": 88.0, "carbs": 2.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） ナチュラルチーズ リコッタ", "category": "乳類", "energy": 158, "protein": 7.1, "fat": 57.0, "carbs": 6.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） プロセスチーズ", "category": "乳類", "energy": 311, "protein": 22.7, "fat": 78.0, "carbs": 1.3, "salt": null}, {"name": "＜牛乳及び乳製品＞ （チーズ類） チーズスプレッド", "category": "乳類", "energy": 282, "protein": 15.9, "fat": 87.0, "carbs": 0.6, "salt": null}, {"name": "＜牛乳及び乳製品＞ （アイスクリーム類） アイスクリーム 高脂肪", "category": "乳類", "energy": 205, "protein": 3.5, "fat": 32.0, "carbs": 22.4, "salt": null}, {"name": "＜牛乳及び乳製品＞ （アイスクリーム類） アイスクリーム 普通脂肪", "category": "乳類", "energy": 179, "protein": 3.9, "fat": 53.0, "carbs": 23.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （アイスクリーム類） アイスミルク", "category": "乳類", "energy": 168, "protein": 3.4, "fat": 18.0, "carbs": 23.9, "salt": null}, {"name": "＜牛乳及び乳製品＞ （アイスクリーム類） ラクトアイス 普通脂肪", "category": "乳類", "energy": 217, "protein": 3.1, "fat": 21.0, "carbs": 22.2, "salt": null}, {"name": "＜牛乳及び乳製品＞ （アイスクリーム類） ラクトアイス 低脂肪", "category": "乳類", "energy": 109, "protein": 1.8, "fat": 4.0, "carbs": 20.6, "salt": null}, {"name": "＜牛乳及び乳製品＞ （アイスクリーム類） ソフトクリーム", "category": "乳類", "energy": 147, "protein": 3.8, "fat": 13.0, "carbs": 20.1, "salt": null}, {"name": "＜牛乳及び乳製品＞ （その他） カゼイン", "category": "乳類", "energy": 363, "protein": 86.2, "fat": 26.0, "carbs": 0.0, "salt": null}, {"name": "＜牛乳及び乳製品＞ （その他） シャーベット", "category": "乳類", "energy": 129, "protein": 0.9, "fat": 1.0, "carbs": 28.7, "salt": null}, {"name": "＜牛乳及び乳製品＞ （その他） チーズホエーパウダー", "category": "乳類", "energy": 345, "protein": 12.5, "fat": 28.0, "carbs": 77.0, "salt": null}, {"name": "（植物油脂類） えごま油", "category": "油脂類", "energy": 882, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "（植物油脂類） オリーブ油", "category": "油脂類", "energy": 879, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "（植物油脂類） ごま油", "category": "油脂類", "energy": 875, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "（植物油脂類） なたね油", "category": "油脂類", "energy": 872, "protein": 0.0, "fat": 2.0, "carbs": 0.0, "salt": null}, {"name": "（植物油脂類） やし油", "category": "油脂類", "energy": 874, "protein": 0.0, "fat": 1.0, "carbs": 0.0, "salt": null}, {"name": "（動物油脂類） ラード", "category": "油脂類", "energy": 870, "protein": 0.0, "fat": 100.0, "carbs": 0.0, "salt": null}, {"name": "（バター類） 無発酵バター 有塩バター", "category": "油脂類", "energy": 688, "protein": 0.6, "fat": 210.0, "carbs": 0.2, "salt": null}, {"name": "（バター類） 無発酵バター 食塩不使用バター", "category": "油脂類", "energy": 708, "protein": 0.5, "fat": 220.0, "carbs": 0.2, "salt": null}, {"name": "（バター類） 発酵バター 有塩バター", "category": "油脂類", "energy": 702, "protein": 0.6, "fat": 230.0, "carbs": 4.4, "salt": null}, {"name": "（マーガリン類） マーガリン 家庭用 有塩", "category": "油脂類", "energy": 702, "protein": 0.4, "fat": 5.0, "carbs": 0.5, "salt": null}, {"name": "（マーガリン類） マーガリン 家庭用 無塩", "category": "油脂類", "energy": 702, "protein": 0.4, "fat": 5.0, "carbs": 0.5, "salt": null}, {"name": "（マーガリン類） マーガリン 業務用 有塩", "category": "油脂類", "energy": 728, "protein": 0.3, "fat": 5.0, "carbs": 0.1, "salt": null}, {"name": "（マーガリン類） マーガリン 業務用 無塩", "category": "油脂類", "energy": 728, "protein": 0.3, "fat": 5.0, "carbs": 0.1, "salt": null}, {"name": "（マーガリン類） ファットスプレッド", "category": "油脂類", "energy": 570, "protein": 0.2, "fat": 4.0, "carbs": 0.0, "salt": null}, {"name": "（その他） ショートニング 家庭用", "category": "油脂類", "energy": 873, "protein": 0.0, "fat": 4.0, "carbs": 0.0, "salt": null}, {"name": "（その他） ショートニング 業務用 製菓", "category": "油脂類", "energy": 866, "protein": 0.0, "fat": 4.0, "carbs": 0.0, "salt": null}, {"name": "（その他） ショートニング 業務用 フライ", "category": "油脂類", "energy": 871, "protein": 0.0, "fat": 4.0, "carbs": 0.0, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 甘納豆 あずき", "category": "菓子類", "energy": 288, "protein": 3.4, "fat": 0.0, "carbs": 69.5, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 今川焼 こしあん入り", "category": "菓子類", "energy": 221, "protein": 4.5, "fat": 29.0, "carbs": 48.3, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ うぐいすもち こしあん入り", "category": "菓子類", "energy": 240, "protein": 3.5, "fat": 0.0, "carbs": 55.8, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ かしわもち こしあん入り", "category": "菓子類", "energy": 207, "protein": 4.0, "fat": 0.0, "carbs": 46.7, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 草もち こしあん入り", "category": "菓子類", "energy": 228, "protein": 4.2, "fat": 0.0, "carbs": 52.1, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ くし団子 あん こしあん入り", "category": "菓子類", "energy": 202, "protein": 3.8, "fat": 0.0, "carbs": 45.4, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ くずもち 関西風 くずでん粉製品", "category": "菓子類", "energy": 95, "protein": 0.1, "fat": 0.0, "carbs": 22.5, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ くずもち 関東風 小麦でん粉製品", "category": "菓子類", "energy": 96, "protein": 0.1, "fat": 0.0, "carbs": 22.4, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 桜もち 関西風 こしあん入り", "category": "菓子類", "energy": 200, "protein": 3.5, "fat": 0.0, "carbs": 46.0, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 桜もち 関東風 こしあん入り", "category": "菓子類", "energy": 239, "protein": 4.5, "fat": 0.0, "carbs": 54.2, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 笹だんご こしあん入り", "category": "菓子類", "energy": 231, "protein": 4.0, "fat": 0.0, "carbs": 54.6, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 大福もち こしあん入り", "category": "菓子類", "energy": 227, "protein": 4.6, "fat": 0.0, "carbs": 53.2, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ どら焼 こしあん入り", "category": "菓子類", "energy": 286, "protein": 6.6, "fat": 97.0, "carbs": 58.4, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 生八つ橋 あん入り こしあん入り", "category": "菓子類", "energy": 279, "protein": 3.6, "fat": 0.0, "carbs": 65.4, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ 生八つ橋 あん入り こしあん・つぶしあん混合", "category": "菓子類", "energy": 279, "protein": 3.5, "fat": 0.0, "carbs": 65.5, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう カステラまんじゅう こしあん入り", "category": "菓子類", "energy": 297, "protein": 6.7, "fat": 56.0, "carbs": 62.6, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう かるかんまんじゅう こしあん入り", "category": "菓子類", "energy": 230, "protein": 3.0, "fat": 0.0, "carbs": 53.8, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう くずまんじゅう こしあん入り", "category": "菓子類", "energy": 220, "protein": 3.1, "fat": 0.0, "carbs": 51.4, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう くりまんじゅう こしあん入り", "category": "菓子類", "energy": 301, "protein": 6.5, "fat": 30.0, "carbs": 68.1, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう くりまんじゅう つぶしあん入り", "category": "菓子類", "energy": 300, "protein": 6.7, "fat": 31.0, "carbs": 67.0, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう とうまんじゅう こしあん入り", "category": "菓子類", "energy": 303, "protein": 6.8, "fat": 97.0, "carbs": 61.6, "salt": 0.0}, {"name": "＜和生菓子・和半生菓子類＞ まんじゅう 中華まんじゅう あんまん こしあん入り", "category": "菓子類", "energy": 277, "protein": 6.1, "fat": 3.0, "carbs": 51.3, "salt": null}, {"name": "＜和生菓子・和半生菓子類＞ もなか こしあん入り", "category": "菓子類", "energy": 282, "protein": 4.9, "fat": 0.0, "carbs": 65.5, "salt": null}, {"name": "＜和干菓子類＞ 小麦粉せんべい 南部せんべい ごま入り", "category": "菓子類", "energy": 427, "protein": 11.2, "fat": 0.0, "carbs": 72.0, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ ショートケーキ いちご", "category": "菓子類", "energy": 315, "protein": 6.9, "fat": 140.0, "carbs": 42.7, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ チーズケーキ ベイクドチーズケーキ", "category": "菓子類", "energy": 298, "protein": 8.5, "fat": 160.0, "carbs": 23.3, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ チーズケーキ レアチーズケーキ", "category": "菓子類", "energy": 347, "protein": 5.8, "fat": 64.0, "carbs": 22.5, "salt": 0.1}, {"name": "＜ケーキ・ペストリー類＞ デニッシュペストリー アメリカンタイプ あん入り こしあん", "category": "菓子類", "energy": 331, "protein": 6.0, "fat": 24.0, "carbs": 44.9, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ デニッシュペストリー デンマークタイプ あん入り こしあん", "category": "菓子類", "energy": 385, "protein": 6.5, "fat": 39.0, "carbs": 46.1, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ ドーナッツ イーストドーナッツ プレーン", "category": "菓子類", "energy": 379, "protein": 7.2, "fat": 19.0, "carbs": 43.9, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ ドーナッツ イーストドーナッツ あん入り こしあん", "category": "菓子類", "energy": 343, "protein": 6.8, "fat": 12.0, "carbs": 52.2, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ ドーナッツ イーストドーナッツ あん入り つぶしあん", "category": "菓子類", "energy": 342, "protein": 7.0, "fat": 12.0, "carbs": 51.5, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ ドーナッツ イーストドーナッツ あん入り カスタードクリーム", "category": "菓子類", "energy": 371, "protein": 7.7, "fat": 97.0, "carbs": 44.6, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ ドーナッツ ケーキドーナッツ あん入り こしあん", "category": "菓子類", "energy": 357, "protein": 8.3, "fat": 120.0, "carbs": 63.7, "salt": null}, {"name": "＜ケーキ・ペストリー類＞ バターケーキ", "category": "菓子類", "energy": 422, "protein": 5.8, "fat": 160.0, "carbs": 48.0, "salt": null}, {"name": "＜デザート菓子類＞ 牛乳寒天", "category": "菓子類", "energy": 62, "protein": 1.1, "fat": 4.0, "carbs": 12.2, "salt": null}, {"name": "＜デザート菓子類＞ ゼリー オレンジ", "category": "菓子類", "energy": 82, "protein": 2.1, "fat": 0.0, "carbs": 19.8, "salt": null}, {"name": "＜デザート菓子類＞ ゼリー コーヒー", "category": "菓子類", "energy": 44, "protein": 1.6, "fat": 0.0, "carbs": 10.3, "salt": null}, {"name": "＜キャンデー類＞ バタースコッチ", "category": "菓子類", "energy": 420, "protein": 0.0, "fat": 17.0, "carbs": 91.0, "salt": null}, {"name": "＜チョコレート類＞ アーモンドチョコレート", "category": "菓子類", "energy": 559, "protein": 11.4, "fat": 12.0, "carbs": 43.3, "salt": null}, {"name": "＜チョコレート類＞ カバーリングチョコレート", "category": "菓子類", "energy": 489, "protein": 7.1, "fat": 15.0, "carbs": 64.2, "salt": null}, {"name": "＜チョコレート類＞ ホワイトチョコレート", "category": "菓子類", "energy": 587, "protein": 7.2, "fat": 22.0, "carbs": 50.9, "salt": null}, {"name": "＜チョコレート類＞ ミルクチョコレート", "category": "菓子類", "energy": 549, "protein": 6.9, "fat": 19.0, "carbs": 55.8, "salt": null}, {"name": "＜その他＞ しるこ こしあん", "category": "菓子類", "energy": 215, "protein": 4.7, "fat": 0.0, "carbs": 48.7, "salt": null}, {"name": "＜その他＞ チョコレートクリーム", "category": "菓子類", "energy": 480, "protein": 4.6, "fat": 15.0, "carbs": 47.3, "salt": null}, {"name": "＜調味料類＞ （しょうゆ類） こいくちしょうゆ 減塩", "category": "調味料・香辛料", "energy": 69, "protein": 8.1, "fat": 0.0, "carbs": 9.0, "salt": null}, {"name": "＜調味料類＞ （しょうゆ類） うすくちしょうゆ 低塩", "category": "調味料・香辛料", "energy": 77, "protein": 6.4, "fat": 0.0, "carbs": 7.6, "salt": 2.9}, {"name": "＜調味料類＞ （食塩類） 食塩", "category": "調味料・香辛料", "energy": null, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "＜調味料類＞ （食塩類） 並塩", "category": "調味料・香辛料", "energy": null, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "＜調味料類＞ （食塩類） 減塩タイプ食塩 調味料含む", "category": "調味料・香辛料", "energy": 52, "protein": 0.0, "fat": 0.0, "carbs": 16.7, "salt": null}, {"name": "＜調味料類＞ （食塩類） 減塩タイプ食塩 調味料不使用", "category": "調味料・香辛料", "energy": null, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "＜調味料類＞ （食塩類） 精製塩 家庭用", "category": "調味料・香辛料", "energy": null, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "＜調味料類＞ （食塩類） 精製塩 業務用", "category": "調味料・香辛料", "energy": null, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "salt": null}, {"name": "＜調味料類＞ （調味ソース類） ごま酢", "category": "調味料・香辛料", "energy": 212, "protein": 4.0, "fat": null, "carbs": 29.9, "salt": 0.5}, {"name": "＜調味料類＞ （調味ソース類） ごまだれ", "category": "調味料・香辛料", "energy": 282, "protein": 7.2, "fat": null, "carbs": 29.2, "salt": 1.1}, {"name": "＜調味料類＞ （ドレッシング類） 半固形状ドレッシング マヨネーズ 全卵型", "category": "調味料・香辛料", "energy": 657, "protein": 1.4, "fat": 55.0, "carbs": 3.6, "salt": null}, {"name": "＜調味料類＞ （ドレッシング類） 半固形状ドレッシング マヨネーズ 卵黄型", "category": "調味料・香辛料", "energy": 656, "protein": 2.5, "fat": 140.0, "carbs": 0.6, "salt": null}, {"name": "＜調味料類＞ （ドレッシング類） 乳化液状ドレッシング ごまドレッシング", "category": "調味料・香辛料", "energy": 394, "protein": 2.7, "fat": 7.0, "carbs": 15.0, "salt": 0.3}, {"name": "＜調味料類＞ （みそ類） 米みそ だし入りみそ 減塩", "category": "調味料・香辛料", "energy": 165, "protein": 10.3, "fat": 1.0, "carbs": 22.2, "salt": null}, {"name": "＜調味料類＞ （みそ類） 減塩みそ", "category": "調味料・香辛料", "energy": 191, "protein": 11.0, "fat": 0.0, "carbs": 25.7, "salt": null}, {"name": "＜調味料類＞ （みそ類） ごまみそ", "category": "調味料・香辛料", "energy": 245, "protein": 9.4, "fat": 0.0, "carbs": 32.9, "salt": 0.0}, {"name": "＜香辛料類＞ シナモン 粉", "category": "調味料・香辛料", "energy": 361, "protein": 3.6, "fat": 0.0, "carbs": 79.6, "salt": null}, {"name": "＜香辛料類＞ にんにく ガーリックパウダー 食塩無添加", "category": "調味料・香辛料", "energy": 386, "protein": 19.9, "fat": 2.0, "carbs": 73.8, "salt": null}, {"name": "＜香辛料類＞ にんにく ガーリックパウダー 食塩添加", "category": "調味料・香辛料", "energy": 388, "protein": 19.9, "fat": 2.0, "carbs": 73.8, "salt": null}, {"name": "＜その他＞ ベーキングパウダー", "category": "調味料・香辛料", "energy": 153, "protein": 0.0, "fat": 0.0, "carbs": 29.0, "salt": null}, {"name": "あひる卵 ピータン", "category": "卵類", "energy": 187, "protein": 13.7, "fat": 680.0, "carbs": 0.0, "salt": null}, {"name": "うこっけい卵 全卵 生", "category": "卵類", "energy": 153, "protein": 12.0, "fat": 550.0, "carbs": 0.4, "salt": null}, {"name": "うずら卵 全卵 生", "category": "卵類", "energy": 157, "protein": 12.6, "fat": 470.0, "carbs": 0.3, "salt": null}, {"name": "うずら卵 水煮缶詰", "category": "卵類", "energy": 161, "protein": 11.0, "fat": 490.0, "carbs": 0.6, "salt": null}, {"name": "鶏卵 全卵 生", "category": "卵類", "energy": 142, "protein": 12.2, "fat": 370.0, "carbs": 0.4, "salt": null}, {"name": "鶏卵 全卵 ポーチドエッグ", "category": "卵類", "energy": 145, "protein": 12.3, "fat": 420.0, "carbs": 0.2, "salt": null}, {"name": "鶏卵 全卵 いり", "category": "卵類", "energy": 188, "protein": 13.3, "fat": 400.0, "carbs": 0.3, "salt": null}, {"name": "鶏卵 全卵 水煮缶詰", "category": "卵類", "energy": 130, "protein": 10.8, "fat": 400.0, "carbs": 0.0, "salt": null}, {"name": "鶏卵 全卵 加糖全卵", "category": "卵類", "energy": 200, "protein": 9.8, "fat": 330.0, "carbs": 20.7, "salt": null}, {"name": "鶏卵 全卵 乾燥全卵", "category": "卵類", "energy": 540, "protein": 49.1, "fat": 1500.0, "carbs": 0.2, "salt": null}, {"name": "鶏卵 卵黄 生", "category": "卵類", "energy": 333, "protein": 16.5, "fat": 1200.0, "carbs": 0.2, "salt": null}, {"name": "鶏卵 卵黄 加糖卵黄", "category": "卵類", "energy": 326, "protein": 12.1, "fat": 820.0, "carbs": 20.7, "salt": null}, {"name": "鶏卵 卵黄 乾燥卵黄", "category": "卵類", "energy": 632, "protein": 30.3, "fat": 2300.0, "carbs": 0.2, "salt": null}, {"name": "鶏卵 卵白 生", "category": "卵類", "energy": 45, "protein": 10.1, "fat": 1.0, "carbs": 0.5, "salt": null}, {"name": "鶏卵 卵白 乾燥卵白", "category": "卵類", "energy": 355, "protein": 86.5, "fat": 25.0, "carbs": 0.2, "salt": null}, {"name": "鶏卵 たまご豆腐", "category": "卵類", "energy": 76, "protein": 6.5, "fat": 190.0, "carbs": 0.9, "salt": null}, {"name": "鶏卵 たまご焼 だし巻きたまご", "category": "卵類", "energy": 122, "protein": 11.0, "fat": 330.0, "carbs": 0.5, "salt": null}, {"name": "いちご 生", "category": "果実類", "energy": 31, "protein": 0.9, "fat": 0.0, "carbs": 8.5, "salt": null}, {"name": "いちご ジャム 高糖度", "category": "果実類", "energy": 254, "protein": 0.4, "fat": 0.0, "carbs": 63.3, "salt": null}, {"name": "いちご ジャム 低糖度", "category": "果実類", "energy": 197, "protein": 0.5, "fat": 0.0, "carbs": 48.4, "salt": null}, {"name": "いちご 乾", "category": "果実類", "energy": 334, "protein": 0.5, "fat": 0.0, "carbs": 82.8, "salt": null}, {"name": "うめ 梅漬 塩漬", "category": "果実類", "energy": 27, "protein": 0.7, "fat": 0.0, "carbs": 6.7, "salt": null}, {"name": "うめ 梅干し 塩漬", "category": "果実類", "energy": 28, "protein": 0.9, "fat": 0.0, "carbs": 8.6, "salt": null}, {"name": "オリーブ 塩漬 グリーンオリーブ", "category": "果実類", "energy": 146, "protein": 1.0, "fat": 0.0, "carbs": 4.5, "salt": null}, {"name": "オリーブ 塩漬 ブラックオリーブ", "category": "果実類", "energy": 119, "protein": 0.8, "fat": 0.0, "carbs": 3.4, "salt": null}, {"name": "オリーブ 塩漬 スタッフドオリーブ", "category": "果実類", "energy": 139, "protein": 0.8, "fat": 0.0, "carbs": 4.2, "salt": null}, {"name": "（かんきつ類） オレンジ ネーブル 砂じょう 生", "category": "果実類", "energy": 49, "protein": 0.9, "fat": 0.0, "carbs": 11.8, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア 米国産 砂じょう 生", "category": "果実類", "energy": 43, "protein": 1.0, "fat": 0.0, "carbs": 9.8, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア 果実飲料 ストレートジュース", "category": "果実類", "energy": 46, "protein": 0.8, "fat": 0.0, "carbs": 11.0, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア 果実飲料 濃縮還元ジュース", "category": "果実類", "energy": 47, "protein": 0.7, "fat": 0.0, "carbs": 10.7, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア 果実飲料 50%果汁入り飲料", "category": "果実類", "energy": 47, "protein": 0.4, "fat": 0.0, "carbs": 10.8, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア 果実飲料 30%果汁入り飲料", "category": "果実類", "energy": 41, "protein": 0.2, "fat": 0.0, "carbs": 10.0, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア マーマレード 高糖度", "category": "果実類", "energy": 237, "protein": 0.2, "fat": 0.0, "carbs": 63.2, "salt": null}, {"name": "（かんきつ類） オレンジ バレンシア マーマレード 低糖度", "category": "果実類", "energy": 193, "protein": 0.3, "fat": 0.0, "carbs": 47.7, "salt": null}, {"name": "（かんきつ類） オレンジ 福原オレンジ 砂じょう 生", "category": "果実類", "energy": 43, "protein": 1.0, "fat": 0.0, "carbs": 9.8, "salt": null}, {"name": "（かんきつ類） レモン 全果 生", "category": "果実類", "energy": 43, "protein": 0.9, "fat": 0.0, "carbs": 12.5, "salt": null}, {"name": "（かんきつ類） レモン 果汁 生", "category": "果実類", "energy": 24, "protein": 0.4, "fat": 0.0, "carbs": 8.6, "salt": null}, {"name": "パインアップル 砂糖漬", "category": "果実類", "energy": 356, "protein": 0.5, "fat": 0.0, "carbs": 86.8, "salt": null}, {"name": "バナナ 生", "category": "果実類", "energy": 94, "protein": 1.1, "fat": 0.0, "carbs": 22.5, "salt": null}, {"name": "バナナ 乾", "category": "果実類", "energy": 318, "protein": 3.8, "fat": 0.0, "carbs": 78.5, "salt": null}, {"name": "ブルーベリー 生", "category": "果実類", "energy": 48, "protein": 0.5, "fat": 0.0, "carbs": 12.9, "salt": null}, {"name": "ブルーベリー ジャム", "category": "果実類", "energy": 176, "protein": 0.7, "fat": 0.0, "carbs": 43.8, "salt": null}, {"name": "ブルーベリー 乾", "category": "果実類", "energy": 282, "protein": 2.7, "fat": 0.0, "carbs": 72.5, "salt": null}, {"name": "マンゴー 生", "category": "果実類", "energy": 69, "protein": 0.6, "fat": 0.0, "carbs": 16.9, "salt": null}, {"name": "マンゴー ドライマンゴー", "category": "果実類", "energy": 343, "protein": 3.1, "fat": 0.0, "carbs": 84.9, "salt": null}, {"name": "ラズベリー 生", "category": "果実類", "energy": 36, "protein": 1.1, "fat": 0.0, "carbs": 10.2, "salt": null}];
-
 
 function openPresetSearch(){
   const q = document.getElementById('mf-name')?.value||'';
   renderPresetModal(q);
 }
 
-function renderPresetModal(query=''){
+function renderPresetModal(query){
+  query = query || '';
   const results = query.length>=1
     ? PRESET_INGREDIENTS.filter(p=>p.name.includes(query)||p.category.includes(query)).slice(0,30)
     : PRESET_INGREDIENTS.slice(0,30);
   const cats = [...new Set(PRESET_INGREDIENTS.map(p=>p.category))];
   document.getElementById('modal-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-      <button class="btn btn-sm" type="button" onclick="history.back();closePresetModal()">← 戻る</button>
+      <button class="btn btn-sm" type="button" onclick="closePresetModal()">← 戻る</button>
       <p style="font-size:16px;font-weight:600;">食品成分表から選ぶ</p>
     </div>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:8px;">文部科学省「日本食品標準成分表2020年版（八訂）」より（292品目）</p>
     <input type="text" id="preset-search" value="${query}" placeholder="食材名で検索（例：バター、薄力粉）"
       oninput="renderPresetModal(this.value)"
       style="width:100%;margin-bottom:8px;font-size:14px;"/>
@@ -1544,19 +1437,19 @@ function renderPresetModal(query=''){
     <div style="max-height:50vh;overflow-y:auto;">
       ${results.length===0
         ? '<p style="text-align:center;color:var(--text3);padding:16px;">見つかりませんでした</p>'
-        : results.map(p=>`
-          <div onclick="applyPreset(${JSON.stringify(p).replace(/"/g,'&quot;')})"
-            style="padding:10px 12px;border-bottom:0.5px solid var(--border);cursor:pointer;active:background:var(--bg2);">
+        : results.map((p,idx)=>`
+          <div onclick="applyPresetByIndex(${PRESET_INGREDIENTS.indexOf(p)})"
+            style="padding:10px 12px;border-bottom:0.5px solid var(--border);cursor:pointer;">
             <div style="font-size:13px;font-weight:500;">${p.name}</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px;">
-              ${p.category}　${p.energy!=null?p.energy+'kcal':'—'}　たんぱく質${p.protein!=null?p.protein+'g':'—'}　脂質${p.fat!=null?p.fat+'g':'—'}　炭水化物${p.carbs!=null?p.carbs+'g':'—'}
-            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;">${p.category}　${p.energy!=null?p.energy+'kcal':'—'}</div>
           </div>`).join('')}
     </div>`;
   document.getElementById('modal').style.display='flex';
 }
 
-function applyPreset(p){
+function applyPresetByIndex(idx){
+  const p = PRESET_INGREDIENTS[idx];
+  if(!p) return;
   const nameEl = document.getElementById('mf-name');
   const kcalEl = document.getElementById('mf-kcal');
   const proteinEl = document.getElementById('mf-protein');
@@ -1570,12 +1463,10 @@ function applyPreset(p){
   if(carbsEl) carbsEl.value = p.carbs||'';
   if(saltEl) saltEl.value = p.salt||'';
   closeModal();
-  alert(`「${p.name}」の栄養成分を自動入力しました。食材名・購入量・価格を確認して保存してください。`);
 }
 
 function closePresetModal(){ closeModal(); }
 
-// ========== メニュー 手動追加・編集 ==========
 let editingComponents = [];
 
 function openAddMenu(){
@@ -1645,8 +1536,7 @@ function renderComponentRows(){
           style="flex:2;min-width:120px;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;cursor:pointer;color:${c.name?'inherit':'var(--text3)'};">
           ${c.name||(isRecipe?'レシピを選択 ▼':'食材を選択 ▼')}
         </div>
-        <input type="number" value="${c.qty||''}" onchange="updateComponentQty(${i},this.value)"
-          placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
+        <input type="number" value="${c.qty||''}" onchange="updateComponentQty(${i},this.value)" placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateComponentUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
           ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${c.unit===u?' selected':''}>${u}</option>`).join('')}
         </select>
@@ -1657,12 +1547,8 @@ function renderComponentRows(){
   updateMenuTotal();
 }
 
-function toKatakana(str){
-  return str.replace(/[ぁ-ん]/g, s=>String.fromCharCode(s.charCodeAt(0)+0x60));
-}
-function toHiragana(str){
-  return str.replace(/[ァ-ン]/g, s=>String.fromCharCode(s.charCodeAt(0)-0x60));
-}
+function toKatakana(str){ return str.replace(/[ぁ-ん]/g, s=>String.fromCharCode(s.charCodeAt(0)+0x60)); }
+function toHiragana(str){ return str.replace(/[ァ-ン]/g, s=>String.fromCharCode(s.charCodeAt(0)-0x60)); }
 function fuzzyMatch(name, query){
   if(!query) return true;
   const q = query.toLowerCase();
@@ -1670,7 +1556,6 @@ function fuzzyMatch(name, query){
   return n.includes(q) || n.includes(toKatakana(q)) || n.includes(toHiragana(q));
 }
 
-// ========== ピッカーモーダル（食材・レシピ選択）==========
 let _pickerContext = null;
 
 function openPickerModal(type, index){
@@ -1685,29 +1570,20 @@ function renderPickerModal(filterCat){
   const item = isComponent ? editingComponents[ctx.index] : editingIngredients[ctx.index];
   const isRecipe = item.isRecipe;
   const options = isRecipe ? recipes : masterData;
-
-  // カテゴリータブ（50音順・食材もレシピも対応）
   const cats = ['すべて','あ行','か行','さ行','た行','な行','は行','ま行','や行','ら行','わ行','A-Z'];
   const hiraganaMap = {'あ行':'[あいうえおアイウエオ]','か行':'[かきくけこがぎぐげごカキクケコ]','さ行':'[さしすせそざじずぜぞサシスセソ]','た行':'[たちつてとだぢづでどタチツテト]','な行':'[なにぬねのナニヌネノ]','は行':'[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホ]','ま行':'[まみむめもマミムメモ]','や行':'[やゆよヤユヨ]','ら行':'[らりるれろラリルレロ]','わ行':'[わをんワヲン]','A-Z':'[A-Za-z]'};
-
   let filtered = options;
-  if(filterCat && filterCat !== 'すべて' && !isRecipe){
-    if(filterCat === 'A-Z'){
-      filtered = options.filter(o=>/^[A-Za-z]/.test(o.name));
-    } else {
-      const pat = new RegExp('^' + hiraganaMap[filterCat]);
-      filtered = options.filter(o=>pat.test(o.name));
-    }
+  if(filterCat && filterCat !== 'すべて'){
+    if(filterCat === 'A-Z'){ filtered = options.filter(o=>/^[A-Za-z]/.test(o.name)); }
+    else { const pat = new RegExp('^' + hiraganaMap[filterCat]); filtered = options.filter(o=>pat.test(o.name)); }
   }
-
-  const tabHTML = cats.length ? `
+  const tabHTML = `
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
       ${cats.map(c=>`
         <button class="btn btn-sm" type="button" onclick="renderPickerModal('${c}')"
-          style="font-size:11px;padding:2px 8px;${(filterCat||'すべて')===c?'background:var(--brown);color:#fff;':''}">${c}</button>
+          style="font-size:11px;padding:2px 8px;${(filterCat||'すべて')===c?'background:var(--text);color:#fff;':''}">${c}</button>
       `).join('')}
-    </div>` : '';
-
+    </div>`;
   document.getElementById('modal-body').innerHTML = `
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
       <button class="btn btn-sm" type="button" onclick="closePicker()">← 戻る</button>
@@ -1731,9 +1607,6 @@ function selectPickerItem(name){
   if(!ctx) return;
   if(ctx.type === 'component'){
     updateComponentName(ctx.index, name);
-    renderMenuEditModal(null); // 元のモーダルに戻る（編集中データは保持）
-    // 編集中のモーダルを再描画
-    const m = menus.find(x=>x.id===ctx._menuId)||null;
     renderMenuEditModalKeepState();
   } else {
     updateIngName(ctx.index, name);
@@ -1750,9 +1623,7 @@ function closePicker(){
 }
 
 function renderMenuEditModalKeepState(){
-  // 現在のeditingComponentsを保持したままメニュー編集モーダルを再描画
   const body = document.getElementById('modal-body');
-  // 名前・売価・名称を一時保存
   const savedName = body.querySelector('#em-name')?.value||'';
   const savedPrice = body.querySelector('#em-price')?.value||'';
   const savedCat = body.querySelector('#em-category')?.value||'';
@@ -1775,11 +1646,6 @@ function renderRecipeEditModalKeepState(){
     if(document.getElementById('er-total-qty')) document.getElementById('er-total-qty').value=savedQty;
     if(document.getElementById('er-total-unit')) document.getElementById('er-total-unit').value=savedUnit;
   },0);
-}
-
-function filterComponent(i, val){
-  editingComponents[i]._search = val;
-  renderComponentRows();
 }
 
 function addComponentRow(type){
@@ -1824,7 +1690,7 @@ async function saveMenuAdd(){
   const total=components.reduce((s,c)=>s+(c.cost||0),0);
   const rate=price&&total?total/price*100:null;
   setSyncing();
-  const res=await sb.from('menus').insert({name,components,total,price,rate,category});
+  const res=await sb.from('menus').insert({name,components,total,price,rate,category,store_id:currentStoreId});
   if(res.error){setError('保存失敗');console.error(res.error);return;}
   await loadAll(); closeModal(); alert(`「${name}」を追加しました！`);
 }
@@ -1843,7 +1709,6 @@ async function saveMenuEdit(id){
   await loadAll(); closeModal(); alert(`「${name}」を保存しました！`);
 }
 
-// ========== レシピ 手動追加・編集 ==========
 let editingIngredients = [];
 
 function openAddRecipe(){
@@ -1899,10 +1764,6 @@ function renderIngredientRows(){
   }
   el.innerHTML=editingIngredients.map((ing,i)=>{
     const isRecipe = ing.isRecipe;
-    const options = isRecipe ? recipes : masterData;
-    const filtered = ing._search
-      ? options.filter(o=>fuzzyMatch(o.name, ing._search))
-      : options;
     return `
     <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:8px;margin-bottom:6px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -1913,8 +1774,7 @@ function renderIngredientRows(){
         <div onclick="openPickerModal('ingredient',${i})" style="flex:2;min-width:120px;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:#fff;cursor:pointer;color:${ing.name?'inherit':'var(--text3)'};">
           ${ing.name||`${isRecipe?'レシピを選択 ▼':'食材を選択 ▼'}`}
         </div>
-        <input type="number" value="${ing.qty||''}" onchange="updateIngQty(${i},this.value)"
-          placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
+        <input type="number" value="${ing.qty||''}" onchange="updateIngQty(${i},this.value)" placeholder="量" style="width:70px;font-size:13px;flex:none;"/>
         <select onchange="updateIngUnit(${i},this.value)" style="width:70px;font-size:13px;flex:none;">
           ${['g','kg','ml','l','個','枚','本','粒','台','食分','セット'].map(u=>`<option${ing.unit===u?' selected':''}>${u}</option>`).join('')}
         </select>
@@ -1923,11 +1783,6 @@ function renderIngredientRows(){
     </div>`;
   }).join('');
   updateRecipeTotal();
-}
-
-function filterIngredient(i, val){
-  editingIngredients[i]._search = val;
-  renderIngredientRows();
 }
 
 function addIngredientRow(type='ingredient'){
@@ -1975,7 +1830,7 @@ async function saveRecipeAdd(){
   const total=ingredients.reduce((s,i)=>s+(i.cost||0),0);
   const unit=total_qty?total/total_qty:0;
   setSyncing();
-  const res=await sb.from('recipes').insert({name,ingredients,total,unit,total_qty,total_unit,cat:'その他',yield:1,price:0,rate:null});
+  const res=await sb.from('recipes').insert({name,ingredients,total,unit,total_qty,total_unit,cat:'その他',yield:1,price:0,rate:null,store_id:currentStoreId});
   if(res.error){setError('保存失敗');console.error(res.error);return;}
   await loadAll();
   await recalcAll();
@@ -2000,7 +1855,6 @@ async function saveRecipeEdit(id){
   alert(`「${name}」を保存しました！`);
 }
 
-// ---- CSV取込モード切替 ----
 function setImportMode(mode){
   ['menu','recipe','master'].forEach(m=>{
     document.getElementById('import-'+m+'-panel').style.display=m===mode?'block':'none';
@@ -2008,7 +1862,6 @@ function setImportMode(mode){
   });
 }
 
-// ---- メニューCSV取込 ----
 let pendingMenuFiles=[];
 
 function parseFilletMenuCSV(text, filename){
@@ -2080,9 +1933,8 @@ async function doMenuImport(){
   setSyncing();
   const toInsert=[], toUpdate=[];
   ok.forEach(({result:{menuName,components}})=>{
-    // 食材マスター＋レシピ単価で再計算
     const {components:recalcedComps, total} = calcMenuWithMaster(components, recipes);
-    const obj={name:menuName,components:recalcedComps,total,price:0,rate:null};
+    const obj={name:menuName,components:recalcedComps,total,price:0,rate:null,store_id:currentStoreId};
     const ex=menus.find(m=>m.name===menuName);
     if(ex) toUpdate.push({...obj,id:ex.id});
     else toInsert.push(obj);
@@ -2104,7 +1956,6 @@ function resetMenuImport(){
   document.getElementById('menufiles').value='';
 }
 
-// ---- レシピCSV取込 ----
 let pendingFiles=[];
 
 function parseFilletCSV(text,filename){
@@ -2128,8 +1979,6 @@ function parseFilletCSV(text,filename){
     return{name:((cols[nameIdx]||'').trim()).normalize('NFC'),qty,unit:(unitIdx>=0?(cols[unitIdx]||'').trim()||'g':'g').normalize('NFC'),cost,price:qty?parseFloat((cost/qty).toFixed(4)):0};
   }).filter(i=>i.name);
   const totalCost=ingredients.reduce((s,i)=>s+i.cost,0);
-
-  // 総量を自動計算
   const weightUnits=['g','kg','ml','l'];
   const countUnits=['個','枚','本','粒','台','食分','セット','筱','丁','枝'];
   const unitTotals={};
@@ -2144,9 +1993,8 @@ function parseFilletCSV(text,filename){
   });
   let total_qty=0, total_unit='g';
   const countIng=ingredients.find(i=>countUnits.includes(i.unit));
-  if(countIng){
-    total_qty=1; total_unit=countIng.unit;
-  } else if(Object.keys(unitTotals).length>0){
+  if(countIng){ total_qty=1; total_unit=countIng.unit; }
+  else if(Object.keys(unitTotals).length>0){
     Object.entries(unitTotals).forEach(([u,q])=>{if(q>total_qty){total_qty=q;total_unit=u;}});
     total_qty=parseFloat(total_qty.toFixed(2));
   }
@@ -2188,14 +2036,10 @@ function renderFileList(){
   document.getElementById('import-actions').style.display='block';
 }
 
-// ---- 単価計算ヘルパー ----
-// 食材マスターから単価(円/単位)を取得
 function getMasterUnitPrice(name, unit){
   const m = masterData.find(x=>x.name===name);
   if(!m || !m.qty || !m.price) return null;
-  // 単位が一致する場合のみ計算
   if(m.unit === unit) return m.price / m.qty;
-  // kg→g, l→ml変換
   if(m.unit==='kg' && unit==='g') return m.price / (m.qty*1000);
   if(m.unit==='g' && unit==='kg') return m.price / (m.qty/1000);
   if(m.unit==='l' && unit==='ml') return m.price / (m.qty*1000);
@@ -2203,7 +2047,6 @@ function getMasterUnitPrice(name, unit){
   return null;
 }
 
-// レシピの材料を食材マスター単価で再計算
 function calcRecipeWithMaster(ingredients){
   let total = 0;
   const recalcedIngs = ingredients.map(i=>{
@@ -2215,35 +2058,24 @@ function calcRecipeWithMaster(ingredients){
   return {ingredients: recalcedIngs, total};
 }
 
-// メニューの構成要素を食材マスター＋レシピで再計算
 function calcMenuWithMaster(components, recalcedRecipes){
   let total = 0;
   const recalcedComps = components.map(c=>{
     let cost = 0;
     if(c.isRecipe){
-      // サブレシピの場合：total_qtyが設定されていれば 原価合計/total_qty × 使用量
       const r = recalcedRecipes.find(x=>x.name===c.name);
       if(r){
         if(r.total_qty && r.total){
-          // 総量ベースで単価計算（正しい方法）
-          // 単位変換も考慮
           let useQty = c.qty;
           if(r.total_unit==='kg' && c.unit==='g') useQty = c.qty/1000;
           else if(r.total_unit==='g' && c.unit==='kg') useQty = c.qty*1000;
           else if(r.total_unit==='l' && c.unit==='ml') useQty = c.qty/1000;
           else if(r.total_unit==='ml' && c.unit==='l') useQty = c.qty*1000;
           cost = (r.total / r.total_qty) * useQty;
-        } else if(r.unit){
-          // total_qty未設定の場合は旧方式（1個あたり原価）
-          cost = r.unit * c.qty;
-        } else {
-          cost = c.cost||0;
-        }
-      } else {
-        cost = c.cost||0;
-      }
+        } else if(r.unit){ cost = r.unit * c.qty; }
+        else { cost = c.cost||0; }
+      } else { cost = c.cost||0; }
     } else {
-      // 材料の場合：食材マスター単価で計算
       const unitPrice = getMasterUnitPrice(c.name, c.unit);
       cost = unitPrice!=null ? c.qty * unitPrice : (c.cost||0);
     }
@@ -2253,31 +2085,23 @@ function calcMenuWithMaster(components, recalcedRecipes){
   return {components: recalcedComps, total};
 }
 
-// 全レシピ・メニューを一括再計算
 async function recalcAll(){
-  if(!masterData.length){alert('食材マスターが読み込まれていません');return;}
+  if(!masterData.length){return;}
   const btn = document.querySelector('[onclick="recalcAll()"]');
-  btn.disabled=true; btn.textContent='再計算中...';
+  if(btn){btn.disabled=true; btn.textContent='再計算中...';}
   setSyncing();
-
-  // Step1: レシピを再計算
   const recalcedRecipes = recipes.map(r=>{
     const ings = Array.isArray(r.ingredients)?r.ingredients:[];
     const {ingredients, total} = calcRecipeWithMaster(ings);
-    // total_qtyが設定されていれば総量ベース、なければ旧方式
     const unit = r.total_qty ? total/r.total_qty : (r.yield ? total/r.yield : total);
     return {...r, ingredients, total, unit};
   });
-
-  // Step2: メニューを再計算（レシピの新単価を使う）
   const recalcedMenus = menus.map(m=>{
     const comps = Array.isArray(m.components)?m.components:[];
     const {components, total} = calcMenuWithMaster(comps, recalcedRecipes);
     const rate = m.price&&total ? total/m.price*100 : null;
     return {...m, components, total, rate};
   });
-
-  // Step3: Supabaseに保存（チャンク処理）
   const chunkSize = 20;
   for(let i=0;i<recalcedRecipes.length;i+=chunkSize){
     const chunk = recalcedRecipes.slice(i,i+chunkSize);
@@ -2293,10 +2117,8 @@ async function recalcAll(){
       return sb.from('menus').update({components:d.components,total:d.total,rate:d.rate}).eq('id',id);
     }));
   }
-
   await loadAll();
-  btn.disabled=false; btn.textContent='🔄 全レシピ・メニューを再計算';
-  alert(`✅ 再計算完了！\nレシピ${recalcedRecipes.length}件・メニュー${recalcedMenus.length}件を食材マスター単価で更新しました。`);
+  if(btn){btn.disabled=false; btn.textContent='🔄 全レシピ・メニューを再計算';}
 }
 
 async function doImport(){
@@ -2307,18 +2129,13 @@ async function doImport(){
   setSyncing();
   const toInsert=[],toUpdate=[];
   ok.forEach(({result:{recipeName,ingredients,totalCost,total_qty,total_unit}})=>{
-    // 食材マスター単価で再計算
-    const {ingredients:recalcedIngs, total} = calcRecipeWithMaster(
-      ingredients.map(i=>({...i,cost:i.cost||0}))
-    );
-    // 既存レシピのtotal_qtyが手動設定済みの場合は保持する
+    const {ingredients:recalcedIngs, total} = calcRecipeWithMaster(ingredients.map(i=>({...i,cost:i.cost||0})));
     const ex=recipes.find(r=>r.name===recipeName);
     const finalTotalQty = ex && ex.total_qty ? ex.total_qty : total_qty;
     const finalTotalUnit = ex && ex.total_unit ? ex.total_unit : total_unit;
     const unit = finalTotalQty ? total/finalTotalQty : total;
-    const recipe={name:recipeName,cat:'その他',yield:1,price:0,
-      ingredients:recalcedIngs, total, unit, rate:null,
-      total_qty:finalTotalQty, total_unit:finalTotalUnit};
+    const recipe={name:recipeName,cat:'その他',yield:1,price:0,ingredients:recalcedIngs, total, unit, rate:null,
+      total_qty:finalTotalQty, total_unit:finalTotalUnit, store_id:currentStoreId};
     if(ex) toUpdate.push({...recipe,id:ex.id}); else toInsert.push(recipe);
   });
   const promises=[];
@@ -2338,7 +2155,6 @@ function resetImport(){
   document.getElementById('csvfiles').value='';
 }
 
-// ---- 食材マスターCSV取込 ----
 let pendingMasterItems=[];
 
 function parseFilletMasterCSV(text){
@@ -2405,10 +2221,10 @@ async function doMasterImport(){
   btn.disabled=true; btn.textContent='取込中...';
   if(!pendingMasterItems.length){alert('データがありません');btn.disabled=false;btn.textContent='取込・共有';return;}
   setSyncing();
-  await sb.from('master_ingredients').delete().neq('id',0);
+  await sb.from('master_ingredients').delete().eq('store_id', currentStoreId);
   const chunkSize=50;
   for(let i=0;i<pendingMasterItems.length;i+=chunkSize){
-    const chunk=pendingMasterItems.slice(i,i+chunkSize);
+    const chunk=pendingMasterItems.slice(i,i+chunkSize).map(item=>({...item, store_id: currentStoreId}));
     const res=await sb.from('master_ingredients').insert(chunk);
     if(res.error){setError('保存失敗');console.error(res.error);btn.disabled=false;btn.textContent='取込・共有';return;}
   }
@@ -2425,8 +2241,12 @@ function resetMasterImport(){
   document.getElementById('mastercsv').value='';
 }
 
-// ---- 初期化 ----
-loadAll();
+sb.auth.onAuthStateChange((event, session) => {
+  if(event === 'SIGNED_IN' && session && !currentUser){
+    onAuthSuccess(session.user);
+  }
+});
+checkAuthOnLoad();
 </script>
 </body>
 </html>
