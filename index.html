@@ -19,17 +19,26 @@
   --gold:#C4A35A;--gold-bg:#FBF5E6;
   --radius:10px;--radius-sm:6px;
 }
-body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;min-height:100vh;}
-.header{background:var(--text);color:var(--bg);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-bottom:2px solid var(--gold);}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+html,body{width:100%;max-width:100vw;overflow-x:hidden;}
+.header{background:var(--text);color:var(--bg);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;border-bottom:2px solid var(--gold);flex-wrap:wrap;gap:8px;width:100%;box-sizing:border-box;}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+@media (max-width:480px){
+  .header{padding:10px 12px;}
+  .header-right{gap:6px;}
+  #current-store-name{display:none;}
+  .header .btn-sm{padding:5px 8px;font-size:11px;}
+  #stxt{display:none;}
+}
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;max-width:100vw;-webkit-overflow-scrolling:touch;}
 .sync-pill{display:flex;align-items:center;gap:6px;font-size:11px;opacity:0.8;}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;}
 .sync-dot.loading{background:#FACC15;animation:pulse 1s infinite;}
 .sync-dot.error{background:#F87171;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{padding:11px 14px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;letter-spacing:0.04em;}
 .tab.active{color:var(--text);border-bottom:2px solid var(--gold);}
-.body{padding:16px;max-width:600px;margin:0 auto;}
+.body{padding:16px;max-width:600px;margin:0 auto;width:100%;box-sizing:border-box;}
 .sec{display:none;}.sec.active{display:block;}
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(44,24,16,0.04);}
 .card-title{font-size:14px;font-weight:600;margin-bottom:12px;}
@@ -115,7 +124,7 @@ input:focus,select:focus{outline:none;border-color:var(--text);}
   <div style="display:flex;align-items:center;">
     <span style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:#f5ede0;letter-spacing:0.12em;border-bottom:1px solid #a08060;padding-bottom:2px;">Recette</span>
   </div>
-  <div style="display:flex;align-items:center;gap:14px;">
+  <div class="header-right">
     <span id="current-store-name" style="font-size:11px;opacity:0.75;"></span>
     <div class="sync-pill">
       <div class="sync-dot loading" id="sdot"></div>
